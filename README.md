@@ -35,13 +35,36 @@ ollama --version
 
 ### Step 2 — Open ArX-AI
 
-ArX-AI is built to be extremely lightweight. You can use it in several ways:
+ArX-AI is built to be extremely lightweight. You can run it via the terminal in several ways, depending on what tools you have installed:
 
-**Option A: Quick Start (No Server Needed)**
-Since the interface is entirely self-contained, you can simply open the `index.html` file in your favorite web browser (Chrome, Edge, Safari, Firefox).
-Double-click `index.html` in the project folder to start!
+**Option A: Simple file opening (No Server Needed)**
+Since the interface is entirely self-contained, you can simply open the `index.html` file using your OS's default opener:
+```bash
+# macOS
+open index.html
 
-**Option B: Full Docker Setup (Recommended for Advanced Features)**
+# Linux
+xdg-open index.html
+
+# Windows
+start index.html
+```
+
+**Option B: Python Local Server**
+If you have Python installed and prefer to serve the file over localhost (recommended for some API features):
+```bash
+python3 -m http.server 3000
+# Then open http://localhost:3000 in your browser
+```
+
+**Option C: Node.js / npx Server**
+If you have Node.js installed:
+```bash
+npx serve .
+# Then open the URL provided in the terminal
+```
+
+**Option D: Full Docker Setup (Recommended for Advanced Features)**
 If you want to use advanced features like SearXNG (private web search) and ChromaDB (vector memory), you can run the full stack using Docker.
 Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
@@ -51,7 +74,7 @@ git clone https://github.com/willmartAQE/Arx-AI.git
 cd Arx-AI
 
 # 2. Start all services
-docker-compose up -d
+docker compose up -d
 
 # 3. Open your browser
 # Go to http://localhost:3000
