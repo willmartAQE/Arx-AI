@@ -1,0 +1,80 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+#  Nexus AI Workspace — Docker Compose
+#  Tested on macOS Monterey 12+ and Linux
+#  
+#  SECURITY WARNING: Default bind is localhost only.
+#  Changing NEXUS_HOST to 0.0.0.0 exposes Nexus on your LAN.
+#  Always set a strong NEXUS_PASSWORD if doing so.
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Nexus frontend + API proxy ──────────────────────────────
+  nexus:
+    image: nginx:alpine
+    container_name: nexus-ui
+    ports:
+      - "${NEXUS_HOST:-127.0.0.1}:${NEXUS_PORT:-3000}:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    depends_on:
+      - searxng
+      - chromadb
+    labels:
+      - "nexus.service=ui"
+
+  # ── SearXNG — private web search ────────────────────────────
+  searxng:
+    image: searxng/searxng:latest
+    container_name: nexus-search
+    ports:
+      - "127.0.0.1:8888:8080"
+    environment:
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET:-changeme-$(openssl rand -hex 16)}
+      - SEARXNG_BASE_URL=http://localhost:8888
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    restart: unless-stopped
+
+  # ── ChromaDB — local vector memory ──────────────────────────
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: nexus-memory
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - nexus-chroma:/chroma/chroma
+    environment:
+      - CHROMA_SERVER_AUTHN_CREDENTIALS_FILE=/chroma/chroma/auth.json
+      - ALLOW_RESET=true
+    restart: unless-stopped
+
+  # ── Ollama — local LLM inference ────────────────────────────
+  # NOTE: Ollama runs best as a native process on macOS to use
+  # Metal GPU acceleration. Use the native brew install below.
+  # Uncomment this block only for Linux / Docker-only setups.
+  #
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: nexus-ollama
+  #   ports:
+  #     - "127.0.0.1:11434:11434"
+  #   volumes:
+  #     - nexus-ollama:/root/.ollama
+  #   restart: unless-stopped
+  #   # For NVIDIA GPU:
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: all
+  #   #           capabilities: [gpu]
+
+volumes:
+  nexus-chroma:
+  # nexus-ollama:

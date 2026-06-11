@@ -1,0 +1,3399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArX — Local AI Workspace</title>
+  <style>
+    /* ─── Design tokens ─────────────────────────────── */
+    :root {
+      --bg: #0d0f12;
+      --surface: #13161b;
+      --surface2: #1a1e26;
+      --surface3: #222738;
+      --border: #2a2f3d;
+      --border2: #353c50;
+      --accent: #00d2ff;
+      --accent2: #0076ff;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --text: #e8ecf4;
+      --text2: #8b93a8;
+      --text3: #5a6178;
+      --mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --radius: 10px;
+      --radius2: 16px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, .45);
+      --transition: 150ms cubic-bezier(.4, 0, .2, 1);
+    }
+
+    /* ─── Reset ─────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+      font: inherit;
+    }
+
+    input,
+    textarea,
+    select {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      outline: none;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 9px;
+    }
+
+    /* ─── Layout shell ───────────────────────────────── */
+    #shell {
+      display: grid;
+      grid-template-columns: 56px 240px 1fr;
+      grid-template-rows: 100dvh;
+      height: 100dvh;
+    }
+
+    #shell.sidebar-collapsed {
+      grid-template-columns: 56px 0 1fr;
+    }
+
+    /* ─── Icon rail ──────────────────────────────────── */
+    #rail {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 4px;
+      z-index: 20;
+    }
+
+    .rail-logo {
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .rail-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    margin-bottom: 12px;
+    letter-spacing: -1px;
+    flex-shrink: 0;
+    }
+
+    .rail-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text3);
+      font-size: 17px;
+      transition: background var(--transition), color var(--transition);
+      position: relative;
+    }
+
+    .rail-btn:hover {
+      background: var(--surface2);
+      color: var(--text2);
+    }
+
+    .rail-btn.active {
+      background: var(--surface3);
+      color: var(--accent);
+    }
+
+    .rail-spacer {
+      flex: 1;
+    }
+
+    .rail-dot {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      border: 1.5px solid var(--surface);
+    }
+
+    /* ─── Sidebar ────────────────────────────────────── */
+    #sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: width var(--transition);
+    }
+
+    .sidebar-header {
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    .sidebar-action {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--text3);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .sidebar-action:hover {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    #sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .chat-item {
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      transition: background var(--transition);
+    }
+
+    .chat-item:hover {
+      background: var(--surface2);
+    }
+
+    .chat-item.active {
+      background: var(--surface3);
+    }
+
+    .chat-item-icon {
+      font-size: 13px;
+      margin-top: 1px;
+      color: var(--text3);
+      flex-shrink: 0;
+    }
+
+    .chat-item-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-item-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-item-meta {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding: 12px 10px 4px;
+    }
+
+    /* ─── Main area ──────────────────────────────────── */
+    #main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ─── Top bar ────────────────────────────────────── */
+    #topbar {
+      height: 48px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 10px;
+      background: var(--surface);
+    }
+
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .model-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+
+    .model-badge:hover {
+      border-color: var(--accent);
+    }
+
+    .model-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .topbar-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: var(--text3);
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .topbar-btn:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    /* ─── Views ──────────────────────────────────────── */
+    .view {
+      display: none !important;
+      flex: 1;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .view.active {
+      display: flex !important;
+    }
+
+    /* ─── Chat view ──────────────────────────────────── */
+    #chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .msg-row {
+      display: flex;
+      padding: 12px 24px;
+      transition: background var(--transition);
+      justify-content: center;
+    }
+
+    .msg-row:hover {
+      background: rgba(255, 255, 255, .018);
+    }
+
+    .msg-row.user {
+      flex-direction: row-reverse;
+    }
+
+    .msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .msg-avatar.user-av {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      margin-left: 14px;
+    }
+
+    .msg-avatar.ai-av {
+      background: var(--surface3);
+      color: var(--accent);
+      margin-right: 14px;
+    }
+
+    .msg-content {
+      width: 100%;
+      max-width: 840px;
+      min-width: 0;
+    }
+
+    .msg-sender {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text3);
+      margin-bottom: 6px;
+      letter-spacing: .03em;
+    }
+
+    .msg-row.user .msg-sender {
+      text-align: right;
+    }
+
+    .msg-bubble {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .msg-row.user .msg-bubble {
+      background: var(--surface3);
+      border-color: var(--border2);
+    }
+
+    .msg-bubble pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 8px 0;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .msg-bubble code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--bg);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .msg-bubble p {
+      margin: 0 0 6px;
+    }
+
+    .msg-bubble p:last-child {
+      margin: 0;
+    }
+
+    .thinking-pulse {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 4px 0;
+    }
+
+    .thinking-pulse span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: .4;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    .thinking-pulse span:nth-child(2) {
+      animation-delay: .2s;
+    }
+
+    .thinking-pulse span:nth-child(3) {
+      animation-delay: .4s;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: .2;
+        transform: scale(.8);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Chat input */
+    #chat-input-area {
+      padding: 16px 24px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .chat-input-wrap {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      display: flex;
+      flex-direction: column;
+      transition: border-color var(--transition);
+    }
+
+    .chat-input-wrap:focus-within {
+      border-color: var(--accent);
+    }
+
+    .chat-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 10px 0;
+    }
+
+    .chat-tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text3);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .chat-tool-btn:hover {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    .chat-tool-btn.on {
+      background: rgba(109, 140, 255, .15);
+      color: var(--accent);
+    }
+
+    #chat-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      resize: vertical;
+      min-height: 50px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    #chat-input::placeholder {
+      color: var(--text3);
+    }
+
+    .chat-input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px 8px;
+    }
+
+    .chat-hints {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .send-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+
+    .send-btn:hover {
+      opacity: .85;
+      transform: scale(1.05);
+    }
+
+    .send-btn:disabled {
+      opacity: .35;
+      transform: none;
+      cursor: default;
+    }
+
+    /* ─── Agent panel strip ──────────────────────────── */
+    .agent-strip {
+      background: rgba(109, 140, 255, .06);
+      border: 1px solid rgba(109, 140, 255, .2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 0 24px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .agent-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      flex-shrink: 0;
+      animation: pulse 1.5s infinite;
+    }
+
+    .agent-steps {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .agent-step {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .agent-step.done {
+      color: var(--green);
+      border-color: rgba(52, 211, 153, .3);
+    }
+
+    .agent-step.active {
+      color: var(--amber);
+      border-color: rgba(251, 191, 36, .3);
+    }
+
+    /* ─── Welcome / empty state ──────────────────────── */
+    #welcome {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .welcome-logo {
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 0 40px rgba(109, 140, 255, .35);
+    }
+
+    .welcome-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .welcome-sub {
+      font-size: 14px;
+      color: var(--text2);
+      max-width: 420px;
+    }
+
+    .suggestion-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+      max-width: 540px;
+    }
+
+    .suggestion-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .suggestion-card:hover {
+      border-color: var(--accent);
+      background: var(--surface3);
+    }
+
+    .suggestion-card-icon {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .suggestion-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .suggestion-card-desc {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* ─── Cookbook view ──────────────────────────────── */
+    #view-cookbook {
+      overflow-y: auto;
+      padding: 28px 32px;
+    }
+
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .hw-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 20px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .hw-stat label {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .hw-stat .val {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 2px;
+      font-family: var(--mono);
+    }
+
+    .hw-stat .sub {
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .model-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 18px;
+      cursor: pointer;
+      transition: border-color var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .model-card:hover {
+      border-color: var(--accent);
+    }
+
+    .model-card.recommended {
+      border-color: rgba(109, 140, 255, .4);
+    }
+
+    .model-card-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .model-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: var(--surface3);
+    }
+
+    .model-card-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .model-card-family {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .model-badge-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .tag-rec {
+      background: rgba(109, 140, 255, .15);
+      color: var(--accent);
+    }
+
+    .tag-fast {
+      background: rgba(52, 211, 153, .12);
+      color: var(--green);
+    }
+
+    .tag-big {
+      background: rgba(167, 139, 250, .12);
+      color: var(--accent2);
+    }
+
+    .tag-api {
+      background: rgba(251, 191, 36, .1);
+      color: var(--amber);
+    }
+
+    .model-desc {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .model-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .progress-wrap {
+      background: var(--surface3);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 4px;
+      transition: width .5s;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: opacity var(--transition), transform var(--transition);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn:hover {
+      opacity: .88;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--surface3);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    .btn-danger {
+      background: rgba(248, 113, 113, .15);
+      color: var(--red);
+      border: 1px solid rgba(248, 113, 113, .3);
+    }
+
+    /* ─── Research view ──────────────────────────────── */
+    #view-research {
+      overflow-y: auto;
+      padding: 28px 32px;
+    }
+
+    .research-form-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .research-query-input {
+      width: 100%;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      font-size: 15px;
+      color: var(--text);
+      transition: border-color var(--transition);
+      margin: 12px 0;
+    }
+
+    .research-query-input:focus {
+      border-color: var(--accent);
+    }
+
+    .research-opts {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .research-sources {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .source-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .source-item:last-child {
+      border-bottom: none;
+    }
+
+    .source-favicon {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      background: var(--surface3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .source-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .source-url {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .source-snippet {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    /* ─── Arena view ─────────────────────────────────── */
+    #view-arena {
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .arena-body {
+      flex: 1;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .arena-pane {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .arena-pane-header {
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .arena-pane-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .arena-input-row {
+      padding: 12px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .arena-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--text);
+      resize: none;
+    }
+
+    .reveal-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: border-color var(--transition), color var(--transition);
+    }
+
+    .reveal-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ─── Notes / Tasks view ─────────────────────────── */
+    #view-notes {
+      overflow-y: auto;
+      padding: 24px 32px;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .note-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 120px;
+    }
+
+    .note-card:hover {
+      border-color: var(--border2);
+    }
+
+    .note-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .note-card-body {
+      font-size: 12px;
+      color: var(--text2);
+      flex: 1;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+    }
+
+    .note-card-date {
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .note-card-add {
+      border-style: dashed;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .note-card-add:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ─── Email view ─────────────────────────────────── */
+    #view-email {
+      overflow: hidden;
+      flex-direction: row;
+      gap: 0;
+    }
+
+    .email-list {
+      width: 300px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+    }
+
+    .email-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .email-item:hover {
+      background: var(--surface2);
+    }
+
+    .email-item.active {
+      background: var(--surface3);
+    }
+
+    .email-item.unread .email-from {
+      font-weight: 700;
+    }
+
+    .email-from {
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .email-subject {
+      font-size: 12px;
+      color: var(--text2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .email-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .unread-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    .email-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .email-thread-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .email-thread-subject {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .email-thread-meta {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .email-thread-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .email-body-text {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .email-ai-bar {
+      background: rgba(109, 140, 255, .07);
+      border-top: 1px solid rgba(109, 140, 255, .2);
+      padding: 12px 24px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .email-ai-label {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ─── Calendar view ──────────────────────────────── */
+    #view-calendar {
+      overflow-y: auto;
+      padding: 24px 32px;
+    }
+
+    .cal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .cal-title {
+      font-size: 18px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-weekday {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: 6px 0;
+    }
+
+    .cal-day {
+      min-height: 80px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px;
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+
+    .cal-day:hover {
+      border-color: var(--border2);
+    }
+
+    .cal-day.today {
+      border-color: var(--accent);
+    }
+
+    .cal-day.other-month {
+      opacity: .4;
+    }
+
+    .cal-day-num {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+
+    .cal-day.today .cal-day-num {
+      color: var(--accent);
+    }
+
+    .cal-event {
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: rgba(109, 140, 255, .2);
+      color: var(--accent);
+    }
+
+    .cal-event.green {
+      background: rgba(52, 211, 153, .15);
+      color: var(--green);
+    }
+
+    .cal-event.amber {
+      background: rgba(251, 191, 36, .1);
+      color: var(--amber);
+    }
+
+    /* ─── Settings view ──────────────────────────────── */
+    #view-settings {
+      overflow-y: auto;
+      padding: 28px 32px;
+    }
+
+    .settings-section {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius2);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .settings-section-title {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-row {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      flex: 1;
+    }
+
+    .settings-label-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .settings-label-desc {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .toggle {
+      width: 36px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+
+    .toggle.on {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      top: 2px;
+      left: 2px;
+      transition: left var(--transition);
+    }
+
+    .toggle.on::after {
+      left: 18px;
+    }
+
+    .settings-input {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--text);
+      width: 220px;
+      transition: border-color var(--transition);
+    }
+
+    .settings-input:focus {
+      border-color: var(--accent);
+    }
+
+    .security-banner {
+      background: rgba(248, 113, 113, .08);
+      border: 1px solid rgba(248, 113, 113, .25);
+      border-radius: var(--radius2);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--red);
+    }
+
+    .security-banner-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* ─── Document editor view ───────────────────────── */
+    #view-editor {
+      overflow: hidden;
+      flex-direction: row;
+    }
+
+    .editor-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-toolbar {
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .editor-tool {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text2);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .editor-tool:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .editor-tool.active {
+      background: var(--surface3);
+      color: var(--accent);
+    }
+
+    .editor-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .editor-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 48px;
+    }
+
+    .editor-content {
+      max-width: 720px;
+      margin: 0 auto;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--text);
+      outline: none;
+      min-height: 400px;
+    }
+
+    .editor-content h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .editor-content h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 20px 0 8px;
+    }
+
+    .editor-content p {
+      margin-bottom: 14px;
+    }
+
+    .editor-ai-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ai-suggestion-card {
+      background: rgba(109, 140, 255, .07);
+      border: 1px solid rgba(109, 140, 255, .2);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 8px;
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+
+    .ai-suggestion-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    /* ─── Modal ──────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition);
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius2);
+      padding: 24px;
+      width: 480px;
+      max-width: 92vw;
+      box-shadow: var(--shadow);
+      transform: translateY(8px);
+      transition: transform var(--transition);
+    }
+
+    .modal-overlay.open .modal {
+      transform: none;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .modal-row {
+      margin-bottom: 14px;
+    }
+
+    .modal-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .modal-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--text);
+      transition: border-color var(--transition);
+    }
+
+    .modal-input:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* ─── Toast ──────────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 200;
+    }
+
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideIn .2s ease;
+      max-width: 320px;
+    }
+
+    .toast.success {
+      border-color: rgba(52, 211, 153, .3);
+    }
+
+    .toast.error {
+      border-color: rgba(248, 113, 113, .3);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ─── Responsive ─────────────────────────────────── */
+    @media (max-width: 700px) {
+      #shell {
+        grid-template-columns: 0 0 1fr !important;
+      }
+
+      #rail {
+        display: none;
+      }
+
+      #mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        z-index: 50;
+        padding: 8px 0 env(safe-area-inset-bottom, 8px);
+        justify-content: space-around;
+      }
+
+      .mobile-nav-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 4px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text3);
+        font-size: 10px;
+        transition: color var(--transition);
+      }
+
+      .mobile-nav-btn.active {
+        color: var(--accent);
+      }
+
+      .mobile-nav-icon {
+        font-size: 20px;
+      }
+
+      #view-editor .editor-ai-sidebar {
+        display: none;
+      }
+
+      .suggestion-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #view-arena .arena-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+
+      #view-email {
+        flex-direction: column;
+      }
+
+      .email-list {
+        width: 100%;
+        max-height: 200px;
+      }
+
+      #chat-input-area {
+        padding: 12px;
+      }
+
+      #view-cookbook,
+      #view-research,
+      #view-notes,
+      #view-settings,
+      #view-calendar {
+        padding: 16px;
+      }
+    }
+
+    @media (min-width: 701px) {
+      #mobile-nav {
+        display: none;
+      }
+    }
+
+    /* ─── Misc utils ─────────────────────────────────── */
+    .flex {
+      display: flex;
+    }
+
+    .flex-1 {
+      flex: 1;
+    }
+
+    .items-center {
+      align-items: center;
+    }
+
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .gap-2 {
+      gap: 8px;
+    }
+
+    .gap-3 {
+      gap: 12px;
+    }
+
+    .mt-2 {
+      margin-top: 8px;
+    }
+
+    .mt-3 {
+      margin-top: 12px;
+    }
+
+    .mb-3 {
+      margin-bottom: 12px;
+    }
+
+    .text-sm {
+      font-size: 12px;
+    }
+
+    .text-xs {
+      font-size: 11px;
+    }
+
+    .text-muted {
+      color: var(--text2);
+    }
+
+    .text-dim {
+      color: var(--text3);
+    }
+
+    .font-bold {
+      font-weight: 700;
+    }
+
+    .w-full {
+      width: 100%;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      background: var(--surface3);
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    /* Scrollbar thin for Firefox */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── SHELL ──────────────────────────────────────────────── -->
+  <div id="shell">
+
+    <!-- ICON RAIL -->
+    <nav id="rail">
+      <div class="rail-logo">
+        <img src="arx.png" alt="ArX"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div
+          style="display:none;width:100%;height:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));align-items:center;justify-content:center;">
+          A</div>
+      </div>
+      <button class="rail-btn active" data-view="chat" title="Chat" onclick="switchView('chat')">💬</button>
+      <button class="rail-btn" data-view="research" title="Deep Research" onclick="switchView('research')">🔬</button>
+      <button class="rail-btn" data-view="arena" title="Model Arena" onclick="switchView('arena')">⚔️</button>
+      <button class="rail-btn" data-view="cookbook" title="Model Cookbook" onclick="switchView('cookbook')">📚</button>
+      <button class="rail-btn" data-view="editor" title="Documents" onclick="switchView('editor')">📝</button>
+      <button class="rail-btn" data-view="notes" title="Notes & Tasks" onclick="switchView('notes')">📌</button>
+      <button class="rail-btn" data-view="email" title="Email" onclick="switchView('email')">📧</button>
+      <button class="rail-btn" data-view="calendar" title="Calendar" onclick="switchView('calendar')">📅</button>
+      <div class="rail-spacer"></div>
+      <button class="rail-btn" data-view="settings" title="Settings" onclick="switchView('settings')">⚙️</button>
+    </nav>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title" id="sidebar-label">Chats</span>
+        <button class="sidebar-action" onclick="newChat()" title="New chat">＋</button>
+      </div>
+      <div id="sidebar-body">
+        <div class="section-label">Today</div>
+        <div class="chat-item active" onclick="loadChat(0)">
+          <span class="chat-item-icon">💬</span>
+          <div class="chat-item-body">
+            <div class="chat-item-name">Getting started</div>
+            <div class="chat-item-meta">Just now</div>
+          </div>
+        </div>
+        <div class="chat-item" onclick="loadChat(1)">
+          <span class="chat-item-icon">🤖</span>
+          <div class="chat-item-body">
+            <div class="chat-item-name">Python script for CSV analysis</div>
+            <div class="chat-item-meta">2h ago</div>
+          </div>
+        </div>
+        <div class="section-label">Yesterday</div>
+        <div class="chat-item" onclick="loadChat(2)">
+          <span class="chat-item-icon">🔬</span>
+          <div class="chat-item-body">
+            <div class="chat-item-name">Research: LLM inference optimization</div>
+            <div class="chat-item-meta">Yesterday</div>
+          </div>
+        </div>
+        <div class="chat-item" onclick="loadChat(3)">
+          <span class="chat-item-icon">📝</span>
+          <div class="chat-item-body">
+            <div class="chat-item-name">Draft blog post on local AI</div>
+            <div class="chat-item-meta">Yesterday</div>
+          </div>
+        </div>
+        <div class="section-label">This week</div>
+        <div class="chat-item" onclick="loadChat(4)">
+          <span class="chat-item-icon">🛠️</span>
+          <div class="chat-item-body">
+            <div class="chat-item-name">Refactor Node.js auth module</div>
+            <div class="chat-item-meta">Mon</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main id="main">
+      <!-- TOP BAR -->
+      <div id="topbar">
+        <button class="topbar-btn" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+        <span class="topbar-title" id="topbar-title">New Chat</span>
+        <div class="model-badge" onclick="openModelPicker()">
+          <span class="model-dot"></span>
+          <span id="current-model-label">llama3.2:3b · Ollama</span>
+          <span style="font-size:10px; color:var(--text3)">▾</span>
+        </div>
+        <button class="topbar-btn" title="Agent mode" onclick="toggleAgent()" id="agent-toggle-btn">🤖</button>
+        <button class="topbar-btn" title="Share">⬆️</button>
+      </div>
+
+      <!-- CHAT VIEW -->
+      <div class="view active" id="view-chat">
+        <div id="chat-messages">
+          <div id="welcome">
+            <div class="welcome-logo">
+              <img src="arx.png" alt="ArX"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                style="width:100%;height:100%;object-fit:cover;" />
+              <div
+                style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+                A</div>
+            </div>
+            <div class="welcome-title">ArX — Your Private AI Workspace</div>
+            <div class="welcome-sub">Running 100% on your machine. Your data never leaves localhost. Choose a model
+              above and start chatting, or try one of these:</div>
+            <div class="suggestion-grid">
+              <button class="suggestion-card" onclick="fillPrompt('Summarize the key ideas from a PDF I upload')">
+                <div class="suggestion-card-icon">📄</div>
+                <div class="suggestion-card-title">Summarize a document</div>
+                <div class="suggestion-card-desc">Upload a PDF or paste text</div>
+              </button>
+              <button class="suggestion-card"
+                onclick="fillPrompt('Write a Python script that reads a CSV and outputs a summary report')">
+                <div class="suggestion-card-icon">🐍</div>
+                <div class="suggestion-card-title">Write code</div>
+                <div class="suggestion-card-desc">Any language, any task</div>
+              </button>
+              <button class="suggestion-card"
+                onclick="activateAgent(); fillPrompt('Research the latest papers on mixture-of-experts LLMs and write a report')">
+                <div class="suggestion-card-icon">🔬</div>
+                <div class="suggestion-card-title">Deep research</div>
+                <div class="suggestion-card-desc">Agent gathers sources &amp; writes</div>
+              </button>
+              <button class="suggestion-card"
+                onclick="fillPrompt('Help me plan my week: I have 3 meetings on Tuesday and a deadline Friday')">
+                <div class="suggestion-card-icon">📅</div>
+                <div class="suggestion-card-title">Plan my week</div>
+                <div class="suggestion-card-desc">Calendar-aware scheduling</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="agent-strip-container"></div>
+
+        <div id="chat-input-area">
+          <div class="chat-input-wrap">
+            <div class="chat-toolbar">
+              <button class="chat-tool-btn" id="btn-agent" onclick="toggleAgent()" title="Agent mode">🤖 Agent</button>
+              <button class="chat-tool-btn" onclick="toggleTool('web')" id="tool-web">🌐 Web</button>
+              <button class="chat-tool-btn" onclick="toggleTool('files')" id="tool-files">📎 Files</button>
+              <button class="chat-tool-btn" onclick="toggleTool('shell')" id="tool-shell">💻 Shell</button>
+              <button class="chat-tool-btn" onclick="toggleTool('memory')" id="tool-memory">🧠 Memory</button>
+              <button class="chat-tool-btn" onclick="toggleTool('skills')" id="tool-skills">⚡ Skills</button>
+            </div>
+            <textarea id="chat-input" rows="1" placeholder="Message ArX… (⏎ to send, Shift+⏎ for newline)"
+              onkeydown="handleChatKey(event)" oninput="autoGrow(this)"></textarea>
+            <div class="chat-input-footer">
+              <span class="chat-hints text-dim text-xs" id="token-count">0 tokens</span>
+              <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">↑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESEARCH VIEW -->
+      <div class="view" id="view-research">
+        <div class="page-header">
+          <div class="page-title">🔬 Deep Research</div>
+          <div class="page-sub">ArX searches multiple sources, evaluates credibility, and synthesises a structured
+            report.</div>
+        </div>
+        <div class="research-form-card">
+          <div class="font-bold" style="font-size:14px">Research query</div>
+          <textarea class="research-query-input" rows="3" id="research-query"
+            placeholder="e.g. What are the latest advances in local LLM inference optimisation on Apple Silicon?"></textarea>
+          <div class="research-opts">
+            <button class="btn btn-primary" onclick="startResearch()">🔬 Start research</button>
+            <label class="chip"><input type="checkbox" id="res-web" checked style="margin-right:4px"> Web
+              sources</label>
+            <label class="chip"><input type="checkbox" id="res-arxiv" checked style="margin-right:4px"> arXiv</label>
+            <label class="chip"><input type="checkbox" id="res-wiki"> Wikipedia</label>
+            <select
+              style="background:var(--surface3);border:1px solid var(--border);border-radius:7px;padding:4px 8px;font-size:12px;color:var(--text2)">
+              <option>Depth: Standard (5 sources)</option>
+              <option>Depth: Deep (15 sources)</option>
+              <option>Depth: Exhaustive (30+ sources)</option>
+            </select>
+          </div>
+        </div>
+        <div id="research-progress" style="display:none">
+          <div class="agent-strip" style="margin:0 0 16px">
+            <div class="agent-status-dot"></div>
+            <div>
+              <div style="font-weight:600">Researching…</div>
+              <div class="agent-steps" id="research-steps"></div>
+            </div>
+          </div>
+        </div>
+        <div id="research-sources" style="display:none" class="research-sources">
+          <div class="flex justify-between items-center mb-3">
+            <div class="font-bold">Sources found</div>
+            <button class="btn btn-sm btn-primary" onclick="generateReport()">📄 Generate report</button>
+          </div>
+          <div id="source-list"></div>
+        </div>
+        <div id="research-report" style="display:none">
+          <div class="research-sources">
+            <div class="flex justify-between items-center mb-3">
+              <div class="font-bold">Report</div>
+              <div class="flex gap-2">
+                <button class="btn btn-sm btn-ghost">📋 Copy</button>
+                <button class="btn btn-sm btn-ghost">💾 Save to docs</button>
+                <button class="btn btn-sm btn-ghost">📤 Export PDF</button>
+              </div>
+            </div>
+            <div id="report-content" style="font-size:14px;line-height:1.75;color:var(--text)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARENA VIEW -->
+      <div class="view" id="view-arena">
+        <div class="topbar"
+          style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--surface);">
+          <span style="font-size:14px;font-weight:700">⚔️ Model Arena</span>
+          <span style="font-size:12px;color:var(--text2)">Blind A/B test two models — reveal identities when you're
+            done.</span>
+          <div style="flex:1"></div>
+          <button class="btn btn-sm btn-ghost" onclick="revealModels()">👁 Reveal models</button>
+          <button class="btn btn-sm btn-secondary" onclick="resetArena()">🔄 New battle</button>
+        </div>
+        <div class="arena-body">
+          <div class="arena-pane">
+            <div class="arena-pane-header">
+              <span id="arena-a-label"
+                style="background:rgba(109,140,255,.15);color:var(--accent);padding:2px 8px;border-radius:6px;font-size:11px;">Model
+                A</span>
+              <span id="arena-a-model" style="font-size:11px;color:var(--text3)">Hidden</span>
+              <div style="flex:1"></div>
+              <button class="btn btn-sm btn-primary" id="vote-a" onclick="vote('A')">👍 Better</button>
+            </div>
+            <div class="arena-pane-messages" id="arena-a-messages">
+              <div style="text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;">Send a message to
+                begin the comparison</div>
+            </div>
+          </div>
+          <div class="arena-pane">
+            <div class="arena-pane-header">
+              <span id="arena-b-label"
+                style="background:rgba(167,139,250,.15);color:var(--accent2);padding:2px 8px;border-radius:6px;font-size:11px;">Model
+                B</span>
+              <span id="arena-b-model" style="font-size:11px;color:var(--text3)">Hidden</span>
+              <div style="flex:1"></div>
+              <button class="btn btn-sm btn-primary" id="vote-b" style="background:var(--accent2);"
+                onclick="vote('B')">👍 Better</button>
+            </div>
+            <div class="arena-pane-messages" id="arena-b-messages">
+              <div style="text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;">Send a message to
+                begin the comparison</div>
+            </div>
+          </div>
+        </div>
+        <div class="arena-input-row">
+          <textarea class="arena-input" rows="1" id="arena-input" placeholder="Send to both models…"
+            onkeydown="handleArenaKey(event)" oninput="autoGrow(this)"></textarea>
+          <button class="btn btn-primary" onclick="sendArena()">Send ↑</button>
+          <button class="reveal-btn" onclick="revealModels()">Reveal</button>
+        </div>
+      </div>
+
+      <!-- COOKBOOK VIEW -->
+      <div class="view" id="view-cookbook">
+        <div class="page-header">
+          <div class="page-title">📚 Model Cookbook</div>
+          <div class="page-sub">Detected hardware · Recommended models · One-click download &amp; serve</div>
+        </div>
+        <div class="hw-card" id="hw-stats">
+          <div class="hw-stat"><label>Chip</label>
+            <div class="val" id="hw-chip">Intel Core i7</div>
+            <div class="sub">x86_64</div>
+          </div>
+          <div class="hw-stat"><label>Memory</label>
+            <div class="val" id="hw-ram">16 GB</div>
+            <div class="sub">DDR3</div>
+          </div>
+          <div class="hw-stat"><label>Disk free</label>
+            <div class="val" id="hw-disk">240 GB</div>
+            <div class="sub">SSD</div>
+          </div>
+          <div class="hw-stat"><label>Graphics</label>
+            <div class="val" id="hw-gpu" style="font-size:16px;">Intel Iris Pro</div>
+            <div class="sub">Integrated</div>
+          </div>
+          <div class="hw-stat"><label>Ollama</label>
+            <div class="val" style="color:var(--green)" id="hw-ollama">Running</div>
+            <div class="sub">v0.3.12</div>
+          </div>
+          <div class="hw-stat"><label>llama.cpp</label>
+            <div class="val" style="color:var(--green)" id="hw-llamacpp">Built-in</div>
+            <div class="sub">Bundled inside Ollama</div>
+          </div>
+        </div>
+        <div style="margin-bottom:16px;display:flex;gap:8px;align-items:center;">
+          <span class="font-bold" style="font-size:15px">Recommended for your hardware</span>
+          <div style="flex:1"></div>
+          <button class="btn btn-sm btn-ghost" onclick="refreshHardware()">🔄 Re-scan</button>
+        </div>
+        <div class="models-grid" id="models-grid"></div>
+      </div>
+
+      <!-- EDITOR VIEW -->
+      <div class="view" id="view-editor">
+        <div class="editor-sidebar">
+          <div class="sidebar-header">
+            <span class="sidebar-title">Documents</span>
+            <button class="sidebar-action">＋</button>
+          </div>
+          <div id="sidebar-body" style="flex:1;overflow-y:auto;padding:8px;">
+            <!-- Empty document list -->
+          </div>
+        </div>
+        <div class="editor-main">
+          <div class="editor-toolbar">
+            <div class="editor-tool active" title="Bold"><b>B</b></div>
+            <div class="editor-tool" title="Italic"><i>I</i></div>
+            <div class="editor-tool" title="Underline" style="text-decoration:underline">U</div>
+            <div class="editor-divider"></div>
+            <div class="editor-tool" title="H1">H1</div>
+            <div class="editor-tool" title="H2">H2</div>
+            <div class="editor-tool" title="Bullets">•—</div>
+            <div class="editor-tool" title="Code block">&lt;/&gt;</div>
+            <div class="editor-divider"></div>
+            <div class="editor-tool" title="Undo">↩</div>
+            <div class="editor-tool" title="Redo">↪</div>
+            <div style="flex:1"></div>
+            <button class="btn btn-sm btn-primary" onclick="aiEditorSuggest()">✨ AI suggest</button>
+          </div>
+          <div class="editor-body">
+            <div class="editor-content" contenteditable="true" id="editor-content" oninput="editorChanged()">
+              <h1>Untitled Document</h1>
+              <p>Start typing your document here. ArX can help you with AI suggestions, grammar, tone improvements, and
+                more.</p>
+              <p>Press <strong>✨ AI suggest</strong> in the toolbar to get context-aware suggestions for what you're
+                writing.</p>
+            </div>
+          </div>
+        </div>
+        <div class="editor-ai-sidebar">
+          <div class="sidebar-header">
+            <span class="sidebar-title">AI Assistant</span>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:8px;" id="editor-ai-panel">
+            <div style="padding:12px 8px;font-size:12px;color:var(--text3)">Start writing and ArX will offer intelligent
+              suggestions here.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTES VIEW -->
+      <div class="view" id="view-notes">
+        <div class="page-header flex justify-between items-center">
+          <div>
+            <div class="page-title">📌 Notes &amp; Tasks</div>
+            <div class="page-sub">All your thoughts, reminders, and to-dos — searchable and AI-enhanced.</div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-sm btn-ghost" onclick="switchNotesTab('notes')">Notes</button>
+            <button class="btn btn-sm btn-ghost" onclick="switchNotesTab('tasks')">Tasks</button>
+            <button class="btn btn-sm btn-primary" onclick="newNote()">＋ New</button>
+          </div>
+        </div>
+        <div class="notes-grid" id="notes-grid"></div>
+      </div>
+
+      <!-- EMAIL VIEW -->
+      <div class="view" id="view-email">
+        <div class="email-list">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:6px;">
+            <input type="text" placeholder="Search email…"
+              style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:12px;color:var(--text)">
+          </div>
+          <div id="email-list-items"></div>
+        </div>
+        <div class="email-pane" id="email-pane">
+          <div
+            style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text3);">
+            <div style="font-size:32px">📧</div>
+            <div style="font-size:14px">Select an email to read</div>
+            <div style="font-size:12px">Connect IMAP in Settings → Email</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDAR VIEW -->
+      <div class="view" id="view-calendar">
+        <div class="cal-header">
+          <button class="btn btn-ghost btn-sm" onclick="calPrev()">← Prev</button>
+          <div class="cal-title" id="cal-title">June 2026</div>
+          <button class="btn btn-ghost btn-sm" onclick="calNext()">Next →</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-sm btn-primary" onclick="newEvent()">＋ Event</button>
+          <button class="btn btn-sm btn-ghost" onclick="syncCaldav()">🔄 CalDAV sync</button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-weekday">Mon</div>
+          <div class="cal-weekday">Tue</div>
+          <div class="cal-weekday">Wed</div>
+          <div class="cal-weekday">Thu</div>
+          <div class="cal-weekday">Fri</div>
+          <div class="cal-weekday">Sat</div>
+          <div class="cal-weekday">Sun</div>
+        </div>
+        <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+      </div>
+
+      <!-- SETTINGS VIEW -->
+      <div class="view" id="view-settings">
+        <div class="page-header">
+          <div class="page-title">⚙️ Settings</div>
+          <div class="page-sub">Configure models, tools, integrations, and security for your private ArX workspace.
+          </div>
+        </div>
+
+        <div class="security-banner" id="security-banner" style="display:none">
+          <div class="security-banner-icon">⚠️</div>
+          <div>
+            <div style="font-weight:700;margin-bottom:3px">External access detected</div>
+            <div style="font-size:12px">ArX is accessible from outside localhost. Ensure you have set a strong password
+              and are using HTTPS. Anyone with network access can view your data and chats if unprotected.</div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">🤖 AI Models</div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Ollama endpoint</div>
+              <div class="settings-label-desc">Default: http://localhost:11434</div>
+            </div>
+            <input class="settings-input" value="http://localhost:11434" id="setting-ollama">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">OpenAI API key</div>
+              <div class="settings-label-desc">Optional — for GPT-4o, o3, etc.</div>
+            </div>
+            <input class="settings-input" type="password" placeholder="sk-…" id="setting-openai-key">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">OpenRouter API key</div>
+              <div class="settings-label-desc">Access 100+ models via one key</div>
+            </div>
+            <input class="settings-input" type="password" placeholder="sk-or-…" id="setting-openrouter-key">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Anthropic API key</div>
+              <div class="settings-label-desc">For Claude models</div>
+            </div>
+            <input class="settings-input" type="password" placeholder="sk-ant-…" id="setting-anthropic-key">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">llama.cpp server</div>
+              <div class="settings-label-desc">Default: http://localhost:8080</div>
+            </div>
+            <input class="settings-input" value="http://localhost:8080" id="setting-llamacpp">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Default model</div>
+              <div class="settings-label-desc">Used for new chats</div>
+            </div>
+            <select class="settings-input" id="setting-default-model">
+              <option>llama3.2:3b (Ollama)</option>
+              <option>llama3.1:8b (Ollama)</option>
+              <option>mistral:7b (Ollama)</option>
+              <option>gpt-4o (OpenAI)</option>
+              <option>claude-sonnet-4-6 (Anthropic)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">🛠️ Agent &amp; Tools</div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Web search (SearXNG)</div>
+              <div class="settings-label-desc">http://localhost:8888 — run via Docker</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Shell command execution</div>
+              <div class="settings-label-desc">Allows agent to run bash commands. Sandboxed in Docker.</div>
+            </div>
+            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">File system access path</div>
+              <div class="settings-label-desc">Agent can read/write files in this directory only</div>
+            </div>
+            <input class="settings-input" value="~/nexus-workspace" id="setting-fs-path">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Memory (ChromaDB)</div>
+              <div class="settings-label-desc">Stores conversation summaries for long-term context</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">📧 Email (IMAP / SMTP)</div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">IMAP server</div>
+            </div>
+            <input class="settings-input" placeholder="imap.example.com:993" id="setting-imap">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">SMTP server</div>
+            </div>
+            <input class="settings-input" placeholder="smtp.example.com:587" id="setting-smtp">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Email address</div>
+            </div>
+            <input class="settings-input" placeholder="you@example.com" id="setting-email">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Password / App password</div>
+            </div>
+            <input class="settings-input" type="password" placeholder="••••••••" id="setting-email-pass">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">AI email triage</div>
+              <div class="settings-label-desc">Auto-categorise, summarise, and draft replies</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">📅 Calendar</div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">CalDAV server URL</div>
+              <div class="settings-label-desc">Nextcloud, Radicale, iCloud, Google…</div>
+            </div>
+            <input class="settings-input" placeholder="https://caldav.example.com/…" id="setting-caldav">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Username</div>
+            </div>
+            <input class="settings-input" placeholder="username" id="setting-caldav-user">
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Password</div>
+            </div>
+            <input class="settings-input" type="password" placeholder="••••••••" id="setting-caldav-pass">
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">🔒 Security</div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Require login password</div>
+              <div class="settings-label-desc">Protects access to ArX on the local network</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Bind address</div>
+              <div class="settings-label-desc">127.0.0.1 = localhost only (safe). 0.0.0.0 = LAN accessible (risk).</div>
+            </div>
+            <select class="settings-input">
+              <option value="127.0.0.1">127.0.0.1 — localhost only (recommended)</option>
+              <option value="0.0.0.0">0.0.0.0 — all interfaces (LAN/remote)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">
+              <div class="settings-label-title">Change password</div>
+            </div>
+            <button class="btn btn-sm btn-ghost" onclick="toast('Password change UI coming soon', 'info')">Change
+              password →</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">🐳 Docker &amp; Deployment</div>
+          <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+            <div style="font-size:13px;color:var(--text2)">Quick-start commands — copy into your terminal:</div>
+            <pre
+              style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;width:100%;overflow-x:auto;color:var(--text)">
+# Clone and start everything
+git clone https://github.com/yourname/nexus-ai && cd nexus-ai
+docker compose up -d
+
+# Or manual start on macOS (Homebrew)
+brew install ollama && ollama serve &amp;
+ollama pull llama3.2:3b
+open http://localhost:3000</pre>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button class="btn btn-primary" onclick="saveSettings()">💾 Save all settings</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MOBILE NAV -->
+  <nav id="mobile-nav">
+    <button class="mobile-nav-btn active" onclick="switchView('chat')"><span
+        class="mobile-nav-icon">💬</span>Chat</button>
+    <button class="mobile-nav-btn" onclick="switchView('research')"><span
+        class="mobile-nav-icon">🔬</span>Research</button>
+    <button class="mobile-nav-btn" onclick="switchView('cookbook')"><span
+        class="mobile-nav-icon">📚</span>Models</button>
+    <button class="mobile-nav-btn" onclick="switchView('notes')"><span class="mobile-nav-icon">📌</span>Notes</button>
+    <button class="mobile-nav-btn" onclick="switchView('settings')"><span
+        class="mobile-nav-icon">⚙️</span>Settings</button>
+  </nav>
+
+  <!-- MODEL PICKER MODAL -->
+  <div class="modal-overlay" id="model-modal" onclick="closeModal('model-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">Choose a model</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;">Showing connected endpoints. Add more in
+        Settings.</div>
+      <div id="model-list" style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('model-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="switchView('settings')">+ Add endpoint</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════
+       STATE
+    ═══════════════════════════════════════════════════ */
+    const state = {
+      view: 'chat',
+      agentMode: false,
+      activeTools: new Set(),
+      currentModel: { id: 'llama3.2:3b', provider: 'Ollama', label: 'llama3.2:3b · Ollama' },
+      messages: [],
+      calYear: 2026, calMonth: 5,
+      researchPhase: 'idle',
+      arenaModels: { a: 'llama3.2:3b', b: 'mistral:7b' },
+      arenaRevealed: false,
+      notes: [],
+      tasks: [],
+      emails: [],
+      events: {},
+    };
+
+    const models = [
+      { id: 'llama3.2:3b', name: 'Llama 3.2 3B', family: 'Meta · Ollama', icon: '🦙', tags: ['rec', 'fast'], desc: 'Fast, efficient 3B model. Ideal for quick tasks on any hardware.', size: '2.0 GB', ctx: '128k', speed: '45 tok/s', perf: 90, available: true },
+      { id: 'llama3.1:8b', name: 'Llama 3.1 8B', family: 'Meta · Ollama', icon: '🦙', tags: ['rec'], desc: 'Best balance of quality and speed for most tasks. Recommended for daily use.', size: '4.9 GB', ctx: '128k', speed: '22 tok/s', perf: 75, available: true },
+      { id: 'mistral:7b', name: 'Mistral 7B', family: 'Mistral AI · Ollama', icon: '🌪️', tags: ['fast'], desc: 'Excellent instruction following. Great for coding and analysis.', size: '4.1 GB', ctx: '32k', speed: '28 tok/s', perf: 80, available: true },
+      { id: 'phi3.5:3.8b', name: 'Phi 3.5 Mini', family: 'Microsoft · Ollama', icon: '⚡', tags: ['fast'], desc: 'Surprisingly capable tiny model. Best for constrained devices.', size: '2.2 GB', ctx: '128k', speed: '55 tok/s', perf: 70, available: false },
+      { id: 'gemma2:9b', name: 'Gemma 2 9B', family: 'Google · Ollama', icon: '💎', tags: ['rec', 'big'], desc: 'Strong reasoning and knowledge. Good for complex analysis tasks.', size: '5.4 GB', ctx: '8k', speed: '18 tok/s', perf: 72, available: false },
+      { id: 'codellama:13b', name: 'CodeLlama 13B', family: 'Meta · Ollama', icon: '💻', tags: ['big'], desc: 'Specialised for code generation, completion, and debugging.', size: '7.4 GB', ctx: '100k', speed: '12 tok/s', perf: 65, available: false },
+      { id: 'gpt-4o', name: 'GPT-4o', family: 'OpenAI · API', icon: '🟢', tags: ['api'], desc: 'State-of-the-art from OpenAI. Requires API key. Data leaves your machine.', size: 'API', ctx: '128k', speed: 'API', perf: 95, available: false },
+      { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', family: 'Anthropic · API', icon: '🟣', tags: ['api', 'rec'], desc: 'Excellent reasoning and writing. Requires API key.', size: 'API', ctx: '200k', speed: 'API', perf: 93, available: false },
+    ];
+
+    /* ═══════════════════════════════════════════════════
+       NAVIGATION
+    ═══════════════════════════════════════════════════ */
+    function switchView(v) {
+      document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.rail-btn').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.mobile-nav-btn').forEach(el => el.classList.remove('active'));
+
+      const viewEl = document.getElementById('view-' + v);
+      if (viewEl) viewEl.classList.add('active');
+
+      const railBtn = document.querySelector(`.rail-btn[data-view="${v}"]`);
+      if (railBtn) railBtn.classList.add('active');
+
+      document.querySelectorAll(`.mobile-nav-btn`).forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(v)) btn.classList.add('active');
+      });
+
+      state.view = v;
+
+      const titles = { chat: 'Chat', research: 'Deep Research', arena: 'Model Arena', cookbook: 'Model Cookbook', editor: 'Document Editor', notes: 'Notes & Tasks', email: 'Email', calendar: 'Calendar', settings: 'Settings' };
+      document.getElementById('topbar-title').textContent = titles[v] || v;
+      updateSidebarForView(v);
+
+      if (v === 'cookbook') renderCookbook();
+      if (v === 'notes') renderNotes();
+      if (v === 'email') renderEmail();
+      if (v === 'calendar') renderCalendar();
+    }
+
+    function updateSidebarForView(v) {
+      const labels = { chat: 'Chats', research: 'Research history', editor: 'Documents', notes: 'Collections', email: 'Folders', calendar: 'Calendars', cookbook: 'Saved models', arena: 'Battle history' };
+      const label = document.getElementById('sidebar-label');
+      if (label) label.textContent = labels[v] || v;
+    }
+
+    function toggleSidebar() {
+      document.getElementById('shell').classList.toggle('sidebar-collapsed');
+    }
+
+    /* ═══════════════════════════════════════════════════
+       CHAT
+    ═══════════════════════════════════════════════════ */
+    function newChat() {
+      state.messages = [];
+      const msgs = document.getElementById('chat-messages');
+      msgs.innerHTML = document.getElementById('welcome').outerHTML.replace('display:none', '');
+      // Recreate welcome div in place
+      msgs.innerHTML = `<div id="welcome">
+    <div class="welcome-logo">
+      <img src="logo.png" alt="ArX" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="width:100%;height:100%;object-fit:cover;" />
+      <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">A</div>
+    </div>
+    <div class="welcome-title">New Chat</div>
+    <div class="welcome-sub">Start a new conversation with your AI assistant.</div>
+    <div class="suggestion-grid">
+      <button class="suggestion-card" onclick="fillPrompt('Help me write a professional email')"><div class="suggestion-card-icon">✉️</div><div class="suggestion-card-title">Write an email</div><div class="suggestion-card-desc">Professional or casual</div></button>
+      <button class="suggestion-card" onclick="fillPrompt('Explain this concept simply:')"><div class="suggestion-card-icon">💡</div><div class="suggestion-card-title">Explain something</div><div class="suggestion-card-desc">Any topic, simply</div></button>
+      <button class="suggestion-card" onclick="fillPrompt('Review my code and suggest improvements:\\n\\n')"><div class="suggestion-card-icon">🔍</div><div class="suggestion-card-title">Code review</div><div class="suggestion-card-desc">Paste your code</div></button>
+      <button class="suggestion-card" onclick="fillPrompt('Brainstorm 10 ideas for ')"><div class="suggestion-card-icon">🧠</div><div class="suggestion-card-title">Brainstorm</div><div class="suggestion-card-desc">Ideas & creativity</div></button>
+    </div>
+  </div>`;
+      document.getElementById('chat-input').focus();
+    }
+
+    function fillPrompt(text) {
+      const inp = document.getElementById('chat-input');
+      inp.value = text;
+      inp.focus();
+      inp.setSelectionRange(text.length, text.length);
+      autoGrow(inp);
+      updateTokenCount();
+    }
+
+    function handleChatKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    function autoGrow(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+      updateTokenCount();
+    }
+
+    function updateTokenCount() {
+      const inp = document.getElementById('chat-input');
+      const approx = Math.round(inp.value.length / 4);
+      document.getElementById('token-count').textContent = approx + ' tokens';
+    }
+
+    async function sendMessage() {
+      const inp = document.getElementById('chat-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      inp.value = ''; autoGrow(inp);
+      hideWelcome();
+
+      appendMessage('user', 'You', text);
+      const thinkingId = appendThinking();
+
+      await delay(300 + Math.random() * 400);
+      if (state.agentMode) await runAgentSteps(text);
+
+      await streamAIReply(text, thinkingId);
+    }
+
+    function hideWelcome() {
+      const w = document.getElementById('welcome');
+      if (w) w.remove();
+    }
+
+    function appendMessage(role, sender, content) {
+      const msgs = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'msg-row ' + (role === 'user' ? 'user' : '');
+      div.innerHTML = `
+    <div class="msg-avatar ${role === 'user' ? 'user-av' : 'ai-av'}">${role === 'user' ? '👤' : '🤖'}</div>
+    <div class="msg-content">
+      <div class="msg-sender">${sender}</div>
+      <div class="msg-bubble">${formatMsg(content)}</div>
+    </div>`;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    function appendThinking() {
+      const msgs = document.getElementById('chat-messages');
+      const id = 'thinking-' + Date.now();
+      const div = document.createElement('div');
+      div.className = 'msg-row'; div.id = id;
+      div.innerHTML = `<div class="msg-avatar ai-av">🤖</div><div class="msg-content"><div class="msg-sender">${state.currentModel.label}</div><div class="msg-bubble"><div class="thinking-pulse"><span></span><span></span><span></span></div></div></div>`;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return id;
+    }
+
+    async function streamAIReply(prompt, thinkingId) {
+      const thinking = document.getElementById(thinkingId);
+      if (!thinking) return;
+      const bubble = thinking.querySelector('.msg-bubble');
+      bubble.innerHTML = '';
+
+      const senderEl = thinking.querySelector('.msg-sender');
+      senderEl.textContent = state.currentModel.label;
+      thinking.id = '';
+
+      if (state.currentModel.provider === 'Ollama') {
+        try {
+          const urls = ['http://localhost:11434', 'http://127.0.0.1:11434'];
+          let res = null;
+          for (const base of urls) {
+            try {
+              res = await fetch(base + '/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model: state.currentModel.id, prompt: prompt, stream: true }),
+                signal: AbortSignal.timeout(10000)
+              });
+              if (res.ok) break;
+            } catch (e) { /* ignore and try next */ }
+          }
+
+          if (!res || !res.ok) throw new Error('Ollama not reachable');
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let fullText = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(l => l.trim() !== '');
+
+            for (const line of lines) {
+              const parsed = JSON.parse(line);
+              fullText += parsed.response;
+              bubble.innerHTML = formatMsg(fullText);
+              document.getElementById('chat-messages').scrollTop = 999999;
+            }
+          }
+        } catch (e) {
+          bubble.innerHTML = '<span style="color:var(--red)">⚠️ Error connecting to Ollama. Is it running?</span>';
+        }
+      } else {
+        // Fake API fallback for Cloud models
+        bubble.innerHTML = '<span style="color:var(--amber)">⚠️ Cloud API not configured in this demo.</span>';
+      }
+    }
+
+    function formatMsg(text) {
+      return text
+        .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/^(\d+)\. (.+)$/gm, '<div style="margin:2px 0">$1. $2</div>')
+        .replace(/^- (.+)$/gm, '<div style="margin:2px 0">• $1</div>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    }
+
+    /* ═══════════════════════════════════════════════════
+       AGENT
+    ═══════════════════════════════════════════════════ */
+    function toggleAgent() {
+      state.agentMode = !state.agentMode;
+      const btn = document.getElementById('btn-agent');
+      const tbBtn = document.getElementById('agent-toggle-btn');
+      btn.classList.toggle('on', state.agentMode);
+      if (state.agentMode) {
+        toast('Agent mode enabled — tools are active', 'success');
+        ['web', 'memory', 'skills'].forEach(t => { state.activeTools.add(t); document.getElementById('tool-' + t).classList.add('on'); });
+      } else {
+        toast('Agent mode disabled', 'info');
+        state.activeTools.clear();
+        document.querySelectorAll('.chat-tool-btn').forEach(b => b.classList.remove('on'));
+      }
+    }
+
+    function toggleTool(t) {
+      const btn = document.getElementById('tool-' + t);
+      if (state.activeTools.has(t)) { state.activeTools.delete(t); btn.classList.remove('on'); }
+      else { state.activeTools.add(t); btn.classList.add('on'); }
+    }
+
+    function activateAgent() {
+      if (!state.agentMode) toggleAgent();
+    }
+
+    async function runAgentSteps(prompt) {
+      const container = document.getElementById('agent-strip-container');
+      const steps = [];
+      if (state.activeTools.has('web')) steps.push({ label: '🌐 Searching web', done: false });
+      if (state.activeTools.has('memory')) steps.push({ label: '🧠 Checking memory', done: false });
+      steps.push({ label: '📝 Drafting response', done: false });
+
+      container.innerHTML = `<div class="agent-strip">
+    <div class="agent-status-dot"></div>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px">Agent working…</div>
+      <div class="agent-steps" id="agent-steps-inner"></div>
+    </div>
+  </div>`;
+
+      const inner = document.getElementById('agent-steps-inner');
+      for (let s of steps) {
+        const el = document.createElement('span');
+        el.className = 'agent-step active'; el.textContent = s.label;
+        inner.appendChild(el);
+        await delay(500 + Math.random() * 600);
+        el.className = 'agent-step done';
+      }
+      await delay(300);
+      container.innerHTML = '';
+    }
+
+    /* ═══════════════════════════════════════════════════
+       MODEL PICKER
+    ═══════════════════════════════════════════════════ */
+    const OLLAMA_BASE = 'http://localhost:11434';
+
+    async function fetchOllamaModels() {
+      const urls = ['http://localhost:11434', 'http://127.0.0.1:11434'];
+      for (const base of urls) {
+        try {
+          const res = await fetch(base + '/api/tags', { signal: AbortSignal.timeout(4000) });
+          if (!res.ok) continue;
+          const data = await res.json();
+          const ollamaModels = (data.models || []).map(m => ({
+            id: m.name,
+            name: m.name,
+            family: 'Ollama',
+            icon: modelIcon(m.name),
+            tags: ['local'],
+            desc: `Installed locally via Ollama. ${m.details?.parameter_size ? m.details.parameter_size + ' parameters.' : ''}`,
+            size: m.size ? (m.size / 1e9).toFixed(1) + ' GB' : '—',
+            ctx: m.details?.context_length ? Math.round(m.details.context_length / 1000) + 'k' : '—',
+            speed: '—',
+            perf: 75,
+            available: true,
+          }));
+          const el = document.getElementById('hw-ollama');
+          if (el) { el.textContent = 'Running'; el.style.color = 'var(--green)'; }
+          return ollamaModels;
+        } catch (e) { /* try next URL */ }
+      }
+      const el = document.getElementById('hw-ollama');
+      if (el) { el.textContent = 'Offline'; el.style.color = 'var(--red)'; }
+      return [];
+    }
+
+    function modelIcon(name) {
+      const n = name.toLowerCase();
+      if (n.includes('qwen')) return '🐉';
+      if (n.includes('deepseek')) return '🔭';
+      if (n.includes('llama')) return '🦙';
+      if (n.includes('mistral')) return '🌪️';
+      if (n.includes('gemma')) return '💎';
+      if (n.includes('phi')) return '⚡';
+      if (n.includes('coder') || n.includes('code')) return '💻';
+      if (n.includes('starcoder')) return '⭐';
+      if (n.includes('solar')) return '☀️';
+      return '🤖';
+    }
+
+    async function openModelPicker() {
+      const list = document.getElementById('model-list');
+      list.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:13px">⏳ Fetching models from Ollama…</div>';
+      openModal('model-modal');
+
+      const ollamaModels = await fetchOllamaModels();
+      const cloudModels = models.filter(m => m.tags.includes('api'));
+
+      list.innerHTML = '';
+
+      const sections = [];
+      if (ollamaModels.length > 0) sections.push({ label: '🟢 Installed on your Mac · Ollama', ms: ollamaModels });
+      else sections.push({ label: '⚠️ No Ollama models found — is Ollama running?', ms: [] });
+      sections.push({ label: '☁️ Cloud API', ms: cloudModels });
+
+      for (const { label, ms } of sections) {
+        const groupLabel = document.createElement('div');
+        groupLabel.style.cssText = 'padding:8px 4px 4px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.05em;';
+        groupLabel.textContent = label;
+        list.appendChild(groupLabel);
+        ms.forEach(m => {
+          const btn = document.createElement('button');
+          const isActive = m.id === state.currentModel.id;
+          btn.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;width:100%;text-align:left;background:' + (isActive ? 'var(--surface3)' : 'transparent') + ';border:1px solid ' + (isActive ? 'var(--border2)' : 'transparent') + ';transition:background .15s;';
+          btn.innerHTML = `<span style="font-size:20px">${m.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div><div style="font-size:11px;color:var(--text3)">${m.family}${m.size !== '—' ? ' · ' + m.size : ''}</div></div>${m.available ? '<span style="font-size:10px;background:rgba(52,211,153,.15);color:var(--green);padding:2px 7px;border-radius:10px;font-weight:600">Ready</span>' : '<span style="font-size:10px;color:var(--text3)">API</span>'}`;
+          btn.onmouseover = () => { if (!isActive) btn.style.background = 'var(--surface2)'; };
+          btn.onmouseout = () => { if (!isActive) btn.style.background = 'transparent'; };
+          btn.onclick = () => { selectModel(m); closeModal('model-modal'); };
+          list.appendChild(btn);
+        });
+      }
+    }
+
+    function selectModel(m) {
+      const provider = m.family === 'Ollama' ? 'Ollama' : (m.family || 'Ollama');
+      state.currentModel = { id: m.id, provider, label: m.name + ' · ' + provider };
+      document.getElementById('current-model-label').textContent = state.currentModel.label;
+      toast('Switched to ' + m.name, 'success');
+    }
+
+    /* ═══════════════════════════════════════════════════
+       COOKBOOK
+    ═══════════════════════════════════════════════════ */
+    async function renderCookbook() {
+      const grid = document.getElementById('models-grid');
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:16px;color:var(--text3);font-size:13px">⏳ Contacting Ollama…</div>';
+
+      const installed = await fetchOllamaModels();
+      grid.innerHTML = '';
+
+      // --- Installed section ---
+      const hdr1 = document.createElement('div');
+      hdr1.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:800;color:var(--accent);letter-spacing:.08em;padding:4px 0 10px;border-bottom:1px solid var(--border);margin-bottom:2px;';
+      hdr1.textContent = installed.length > 0 ? '✅ INSTALLED ON YOUR MAC' : '⚠️ NO MODELS FOUND — is Ollama running?';
+      grid.appendChild(hdr1);
+
+      installed.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'model-card recommended';
+        card.innerHTML = `
+      <div class="model-card-head">
+        <div class="model-card-icon">${m.icon}</div>
+        <div><div class="model-card-name">${m.name}</div><div class="model-card-family">Ollama · Local</div></div>
+      </div>
+      <div class="model-badge-row"><span class="tag tag-rec">✅ Installed</span><span class="tag tag-fast">⚡ Ready</span></div>
+      <div class="model-desc">${m.desc}</div>
+      <div class="model-meta"><span>💾 ${m.size}</span><span>📏 ${m.ctx} ctx</span></div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:80%"></div></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-sm btn-primary" onclick="selectModelById('${m.id}'); switchView('chat')">Use now →</button>
+        <button class="btn btn-sm btn-ghost" onclick="toast('${m.name} is installed and ready!','success')">Details</button>
+      </div>`;
+        grid.appendChild(card);
+      });
+
+      // --- Discover more section ---
+      const hdr2 = document.createElement('div');
+      hdr2.style.cssText = 'grid-column:1/-1;font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;padding:20px 0 10px;border-bottom:1px solid var(--border);margin-bottom:2px;';
+      hdr2.textContent = '📚 DISCOVER MORE';
+      grid.appendChild(hdr2);
+
+      models.filter(m => !m.tags.includes('api')).forEach(m => {
+        const isInstalled = installed.some(i => i.id === m.id || i.id.startsWith(m.id.split(':')[0]));
+        const tagHTML = m.tags.map(t => `<span class="tag tag-${t}">${{ rec: '⭐ Recommended', fast: '⚡ Fast', big: '🔮 Advanced' }[t] || t}</span>`).join('');
+        const card = document.createElement('div');
+        card.className = 'model-card' + (m.tags.includes('rec') ? ' recommended' : '');
+        card.innerHTML = `
+      <div class="model-card-head">
+        <div class="model-card-icon">${m.icon}</div>
+        <div><div class="model-card-name">${m.name}</div><div class="model-card-family">${m.family}</div></div>
+      </div>
+      <div class="model-badge-row">${tagHTML}${isInstalled ? '<span class="tag tag-rec">✅ Installed</span>' : ''}</div>
+      <div class="model-desc">${m.desc}</div>
+      <div class="model-meta"><span>💾 ${m.size}</span><span>📏 ${m.ctx} ctx</span><span>⚡ ${m.speed}</span></div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${m.perf}%"></div></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        ${isInstalled
+            ? `<button class="btn btn-sm btn-primary" onclick="selectModelById('${m.id}'); switchView('chat')">Use now →</button>`
+            : `<button id="dl-btn-${m.id.replace(/:/g, '-')}" class="btn btn-sm btn-secondary" onclick="downloadModel('${m.id}')">⬇ Download</button>`}
+        <button class="btn btn-sm btn-ghost" onclick="toast('ollama pull ${m.id}','info')">Details</button>
+      </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function selectModelById(id) {
+      state.currentModel = { id, provider: 'Ollama', label: id + ' · Ollama' };
+      document.getElementById('current-model-label').textContent = state.currentModel.label;
+      toast('Switched to ' + id, 'success');
+    }
+
+    async function downloadModel(id) {
+      const btn = document.getElementById('dl-btn-' + id.replace(/:/g, '-'));
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Starting...';
+      }
+      try {
+        const res = await fetch('http://localhost:11434/api/pull', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: id })
+        });
+        
+        if (!res.ok) throw new Error('Failed to pull model');
+        
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunks = decoder.decode(value, { stream: true }).split('\n');
+          for (const chunk of chunks) {
+            if (!chunk.trim()) continue;
+            const data = JSON.parse(chunk);
+            if (btn && data.status) {
+              let text = data.status;
+              if (data.total && data.completed) {
+                const percent = Math.round((data.completed / data.total) * 100);
+                text = `${percent}% - ${data.status}`;
+              }
+              btn.textContent = text;
+            }
+          }
+        }
+        
+        toast('Download complete!', 'success');
+        await renderCookbook();
+      } catch (err) {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '⬇ Download';
+        }
+        toast('Error pulling model: ' + err.message, 'error');
+      }
+    }
+
+    async function refreshHardware() {
+      toast('Scanning Ollama…', 'info');
+      await renderCookbook();
+      toast('Done!', 'success');
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RESEARCH
+    ═══════════════════════════════════════════════════ */
+    const sampleSources = [
+      { favicon: '📰', title: 'Efficient LLM Inference on Apple Silicon: A Survey', url: 'arxiv.org/abs/2024.xxxxx', snippet: 'We survey recent advances in efficient LLM inference, with focus on Apple Neural Engine and Metal acceleration...' },
+      { favicon: '🌐', title: 'Running Llama 3 on MacBook Pro: Benchmarks', url: 'simonwillison.net/2024/llama3', snippet: 'Token throughput reaches 45 tokens/sec on M3 Pro with 18GB unified memory using llama.cpp Q4_K_M quantisation...' },
+      { favicon: '📖', title: 'MLX: Machine Learning for Apple Silicon', url: 'ml-explore.github.io/mlx', snippet: 'MLX is an array framework designed for Apple silicon, enabling efficient model inference using the unified memory architecture...' },
+      { favicon: '🔬', title: 'Quantisation Methods Comparison: GGUF vs GPTQ vs AWQ', url: 'huggingface.co/blog/quantization', snippet: 'A comparison of post-training quantisation methods shows Q4_K_M offers the best perplexity-to-size ratio for 7B models...' },
+      { favicon: '💻', title: 'Ollama 0.3: New Models and Performance Improvements', url: 'ollama.com/blog/0.3', snippet: 'Ollama 0.3 introduces automatic model selection, parallel inference, and 30% throughput improvement for Llama 3 models...' },
+    ];
+
+    async function startResearch() {
+      const query = document.getElementById('research-query').value.trim();
+      if (!query) { toast('Please enter a research query', 'error'); return; }
+
+      document.getElementById('research-progress').style.display = 'block';
+      document.getElementById('research-sources').style.display = 'none';
+      document.getElementById('research-report').style.display = 'none';
+
+      const stepsEl = document.getElementById('research-steps');
+      stepsEl.innerHTML = '';
+      const stepsList = ['🌐 Searching web…', '📖 Scanning arXiv…', '🔍 Evaluating sources…', '✂️ Extracting key passages…'];
+
+      for (const s of stepsList) {
+        const el = document.createElement('span');
+        el.className = 'agent-step active'; el.textContent = s; stepsEl.appendChild(el);
+        await delay(700 + Math.random() * 500);
+        el.className = 'agent-step done';
+      }
+
+      await delay(400);
+      document.getElementById('research-progress').style.display = 'none';
+      document.getElementById('research-sources').style.display = 'block';
+
+      const list = document.getElementById('source-list');
+      list.innerHTML = sampleSources.map(s => `
+    <div class="source-item">
+      <div class="source-favicon">${s.favicon}</div>
+      <div>
+        <div class="source-title">${s.title}</div>
+        <div class="source-url">${s.url}</div>
+        <div class="source-snippet">${s.snippet}</div>
+      </div>
+    </div>`).join('');
+    }
+
+    async function generateReport() {
+      document.getElementById('research-report').style.display = 'block';
+      const el = document.getElementById('report-content');
+      const query = document.getElementById('research-query').value || 'local LLM inference on Apple Silicon';
+      el.innerHTML = '<div class="thinking-pulse" style="padding:20px"><span></span><span></span><span></span></div>';
+      await delay(1200);
+      el.innerHTML = `
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:12px">${query.charAt(0).toUpperCase() + query.slice(1)}</h2>
+    <p style="color:var(--text3);font-size:12px;margin-bottom:20px">Generated by ArX Deep Research · 5 sources · ${new Date().toLocaleDateString()}</p>
+    <h3 style="font-size:15px;font-weight:700;margin:16px 0 8px">Executive Summary</h3>
+    <p>Recent advances in local LLM inference have made running capable AI models on consumer hardware highly accessible. Apple Silicon, particularly M2 and M3 chips, offer exceptional performance for 7B–13B parameter models due to their unified memory architecture, enabling token throughput of 20–55 tok/s depending on model size and quantisation.</p>
+    <h3 style="font-size:15px;font-weight:700;margin:16px 0 8px">Key Findings</h3>
+    <p><strong>1. Quantisation is critical:</strong> Q4_K_M quantisation offers the best trade-off between model quality and memory footprint. A 7B model in Q4_K_M requires ~4.1 GB vs ~14 GB in FP16.</p>
+    <p><strong>2. Apple Silicon advantage:</strong> The unified memory architecture eliminates GPU VRAM constraints, allowing larger models to run efficiently. An M3 Pro with 18GB RAM can comfortably run 13B models.</p>
+    <p><strong>3. Frameworks:</strong> Ollama (user-friendly, automatic quantisation), llama.cpp (maximum performance, tunable), and Apple's MLX (native Metal acceleration) are the leading inference frameworks.</p>
+    <h3 style="font-size:15px;font-weight:700;margin:16px 0 8px">Recommendations</h3>
+    <p>For most users on Apple Silicon: <strong>Ollama + Llama 3.1 8B</strong> provides the best out-of-box experience. Power users should explore llama.cpp with Metal backend for 15–20% additional throughput.</p>
+    <div style="background:var(--surface3);border-radius:8px;padding:12px 16px;margin-top:20px;font-size:12px;color:var(--text3)">
+      Sources: arxiv.org · simonwillison.net · ml-explore.github.io · huggingface.co · ollama.com
+    </div>`;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       ARENA
+    ═══════════════════════════════════════════════════ */
+    function handleArenaKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendArena(); }
+    }
+
+    async function sendArena() {
+      const inp = document.getElementById('arena-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      inp.value = ''; autoGrow(inp);
+
+      ['a', 'b'].forEach(side => {
+        const msgs = document.getElementById('arena-' + side + '-messages');
+        msgs.innerHTML += `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:13px"><strong style="color:var(--text3);font-size:11px">You</strong><br>${text}</div>`;
+        msgs.innerHTML += `<div id="arena-${side}-thinking" style="padding:8px 0"><div class="thinking-pulse"><span></span><span></span><span></span></div></div>`;
+        msgs.scrollTop = 99999;
+      });
+
+      await delay(400 + Math.random() * 600);
+      ['a', 'b'].forEach(side => {
+        const thinking = document.getElementById('arena-' + side + '-thinking');
+        if (thinking) {
+          const replies = ['a', 'b'];
+          thinking.outerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px"><strong style="color:var(--text3);font-size:11px">Model ${side.toUpperCase()}</strong><br>${generateLocalReply(text)}</div>`;
+        }
+        document.getElementById('arena-' + side + '-messages').scrollTop = 99999;
+      });
+    }
+
+    function revealModels() {
+      state.arenaRevealed = true;
+      document.getElementById('arena-a-model').textContent = state.arenaModels.a;
+      document.getElementById('arena-b-model').textContent = state.arenaModels.b;
+      toast('Models revealed: A=' + state.arenaModels.a + ', B=' + state.arenaModels.b, 'info');
+    }
+
+    function resetArena() {
+      state.arenaRevealed = false;
+      document.getElementById('arena-a-messages').innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;">Send a message to begin</div>';
+      document.getElementById('arena-b-messages').innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;">Send a message to begin</div>';
+      document.getElementById('arena-a-model').textContent = 'Hidden';
+      document.getElementById('arena-b-model').textContent = 'Hidden';
+    }
+
+    function vote(side) {
+      toast('Voted: Model ' + side + ' was better!', 'success');
+      revealModels();
+    }
+
+    /* ═══════════════════════════════════════════════════
+       NOTES
+    ═══════════════════════════════════════════════════ */
+    function renderNotes() {
+      const grid = document.getElementById('notes-grid');
+      grid.innerHTML = '';
+      state.notes.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.innerHTML = `<div class="note-card-title">${n.title}</div><div class="note-card-body">${n.body.replace(/\n/g, '<br>')}</div><div class="note-card-date">${n.date}</div>`;
+        card.onclick = () => openNoteModal(n);
+        grid.appendChild(card);
+      });
+      const add = document.createElement('div');
+      add.className = 'note-card note-card-add';
+      add.innerHTML = '＋ New note';
+      add.onclick = () => newNote();
+      grid.appendChild(add);
+    }
+
+    function newNote() {
+      const id = Date.now();
+      state.notes.unshift({ id, title: 'New note', body: '', date: 'Just now' });
+      renderNotes();
+      toast('Note created', 'success');
+    }
+
+    function openNoteModal(n) {
+      toast('Note: ' + n.title, 'info');
+    }
+
+    function switchNotesTab(tab) { toast('Tab: ' + tab, 'info'); }
+
+    /* ═══════════════════════════════════════════════════
+       EMAIL
+    ═══════════════════════════════════════════════════ */
+    function renderEmail() {
+      const list = document.getElementById('email-list-items');
+      list.innerHTML = state.emails.map(e => `
+    <div class="email-item ${e.unread ? 'unread' : ''}" onclick="openEmail(${e.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+        <div class="email-from">${e.from}</div>
+        ${e.unread ? '<div class="unread-dot"></div>' : ''}
+      </div>
+      <div class="email-subject">${e.subject}</div>
+      <div class="email-meta"><span>${e.preview.substring(0, 45)}…</span><span>${e.date}</span></div>
+    </div>`).join('');
+    }
+
+    function openEmail(id) {
+      const email = state.emails.find(e => e.id === id);
+      if (!email) return;
+      email.unread = false;
+      renderEmail();
+      const pane = document.getElementById('email-pane');
+      pane.innerHTML = `
+    <div class="email-thread-header">
+      <div class="email-thread-subject">${email.subject}</div>
+      <div class="email-thread-meta">From <strong>${email.from}</strong> · ${email.date}</div>
+    </div>
+    <div class="email-thread-body">
+      <div class="email-body-text">${email.body.replace(/\n/g, '<br>')}</div>
+    </div>
+    <div class="email-ai-bar">
+      <span class="email-ai-label">✨ AI</span>
+      <button class="btn btn-sm btn-ghost" onclick="emailAI('summarise')">Summarise</button>
+      <button class="btn btn-sm btn-ghost" onclick="emailAI('reply')">Draft reply</button>
+      <button class="btn btn-sm btn-ghost" onclick="emailAI('todo')">Extract to-dos</button>
+      <button class="btn btn-sm btn-ghost" onclick="emailAI('archive')">Archive + label</button>
+    </div>`;
+    }
+
+    function emailAI(action) {
+      const msgs = { summarise: 'Generating email summary…', reply: 'Drafting reply…', todo: 'Extracting action items…', archive: 'Archiving and labelling…' };
+      toast(msgs[action], 'info');
+    }
+
+    /* ═══════════════════════════════════════════════════
+       CALENDAR
+    ═══════════════════════════════════════════════════ */
+    function renderCalendar() {
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      document.getElementById('cal-title').textContent = months[state.calMonth] + ' ' + state.calYear;
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(state.calYear, state.calMonth, 1).getDay();
+      const offset = (firstDay + 6) % 7; // Mon-start
+      const daysInMonth = new Date(state.calYear, state.calMonth + 1, 0).getDate();
+      const today = new Date();
+      const isCurrentMonth = today.getFullYear() === state.calYear && today.getMonth() === state.calMonth;
+
+      // Blank cells
+      for (let i = 0; i < offset; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day other-month';
+        grid.appendChild(cell);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day' + (isCurrentMonth && today.getDate() === d ? ' today' : '');
+        const dateKey = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const eventsForDay = state.events[dateKey] || [];
+        cell.innerHTML = `<div class="cal-day-num">${d}</div>` + eventsForDay.map(e => `<div class="cal-event ${e.color}">${e.title}</div>`).join('');
+        cell.onclick = () => newEvent(dateKey);
+        grid.appendChild(cell);
+      }
+    }
+
+    function calPrev() { state.calMonth--; if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; } renderCalendar(); }
+    function calNext() { state.calMonth++; if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; } renderCalendar(); }
+    function newEvent(date) { toast('New event on ' + (date || 'selected date'), 'info'); }
+    function syncCaldav() { toast('CalDAV sync — configure server in Settings', 'info'); }
+
+    /* ═══════════════════════════════════════════════════
+       EDITOR
+    ═══════════════════════════════════════════════════ */
+    function editorChanged() { /* debounce AI suggestions */ }
+
+    async function aiEditorSuggest() {
+      const panel = document.getElementById('editor-ai-panel');
+      const content = document.getElementById('editor-content').innerText.slice(0, 300);
+      panel.innerHTML = '<div style="padding:12px 8px;font-size:12px;color:var(--text3)"><div class="thinking-pulse"><span></span><span></span><span></span></div></div>';
+      await delay(900);
+      panel.innerHTML = `
+    <div class="ai-suggestion-card">
+      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">✨ Suggestion</div>
+      Consider adding a brief introduction paragraph that explains the purpose of this document to orient the reader. The current opening jumps straight into details.
+      <div class="ai-suggestion-actions">
+        <button class="btn btn-sm btn-primary" onclick="toast('Suggestion applied','success')">Apply</button>
+        <button class="btn btn-sm btn-ghost" onclick="this.closest('.ai-suggestion-card').remove()">Dismiss</button>
+      </div>
+    </div>
+    <div class="ai-suggestion-card" style="margin-top:0">
+      <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">📖 Tone check</div>
+      The tone is professional. Consider using more active voice in paragraph 2 to improve readability.
+      <div class="ai-suggestion-actions">
+        <button class="btn btn-sm btn-secondary" onclick="toast('Opening in chat','info');switchView('chat')">Improve in chat</button>
+      </div>
+    </div>`;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SETTINGS
+    ═══════════════════════════════════════════════════ */
+    function saveSettings() {
+      toast('Settings saved', 'success');
+    }
+
+    function showInstall(tool) {
+      toast('Install ' + tool + ': see docs/INSTALL.md', 'info');
+    }
+
+    /* ═══════════════════════════════════════════════════
+       MODAL
+    ═══════════════════════════════════════════════════ */
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    /* ═══════════════════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════════════════ */
+    function toast(msg, type = 'info') {
+      const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+      const el = document.createElement('div');
+      el.className = 'toast ' + type;
+      el.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; el.style.transition = 'all .3s'; setTimeout(() => el.remove(), 300); }, 3000);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       UTILS
+    ═══════════════════════════════════════════════════ */
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function loadChat(idx) {
+      document.querySelectorAll('.chat-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+      switchView('chat');
+      if (idx === 0) newChat();
+    }
+
+    /* ═══════════════════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderCookbook();
+      renderEmail();
+      renderNotes();
+      renderCalendar();
+
+      // Auto-resize textarea on input
+      document.getElementById('chat-input').addEventListener('input', function () { autoGrow(this); updateTokenCount(); });
+      document.getElementById('arena-input').addEventListener('input', function () { autoGrow(this); });
+
+      // Detect Ollama and pre-select first installed model
+      const ollamaModels = await fetchOllamaModels();
+      if (ollamaModels.length > 0) {
+        const first = ollamaModels[0];
+        state.currentModel = { id: first.id, provider: 'Ollama', label: first.name + ' · Ollama' };
+        document.getElementById('current-model-label').textContent = state.currentModel.label;
+      }
+    });
+  </script>
+</body>
+
+</html>
