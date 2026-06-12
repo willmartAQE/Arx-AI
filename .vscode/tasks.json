@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start static server (localhost:3000)",
+      "type": "shell",
+      "command": "python3 -m http.server 3000",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent" },
+      "runOptions": { "runOn": "folderOpen" }
+    }
+  ]
+}

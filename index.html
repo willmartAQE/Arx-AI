@@ -1,100 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ArX — Local AI Workspace</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* ─── Design tokens ─────────────────────────────── */
-    :root {
-      --bg: #0d0f12;
-      --surface: #13161b;
-      --surface2: #1a1e26;
-      --surface3: #222738;
-      --border: #2a2f3d;
-      --border2: #353c50;
-      --accent: #00d2ff;
-      --accent2: #0076ff;
-      --green: #34d399;
-      --amber: #fbbf24;
-      --red: #f87171;
-      --text: #e8ecf4;
-      --text2: #8b93a8;
-      --text3: #5a6178;
-      --mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-      --sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      --radius: 10px;
-      --radius2: 16px;
-      --shadow: 0 4px 24px rgba(0, 0, 0, .45);
-      --transition: 150ms cubic-bezier(.4, 0, .2, 1);
-    }
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ArX AI</title>
+</head>
+<body>
+  <!-- WIKI / USER MANUAL VIEW (dynamic content populated by JS) -->
+  <div class="view" id="view-wiki" style="overflow-y: auto; padding: 32px 40px; background: var(--bg);">
+        <div class="page-header" style="margin-bottom: 20px;">
+          <div class="page-title" style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">📖 ArX-AI User Manual</div>
+          <div class="page-sub" style="font-size: 15px; margin-top: 8px; color: var(--text2);">Your comprehensive guide to mastering the private ArX workspace.</div>
+        </div>
 
-    /* ─── Reset ─────────────────────────────────────── */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
+        <div id="wiki-content" style="max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:24px;padding-bottom:40px">
+          <!-- content injected here -->
+        </div>
+      </div>
+
+    <style>
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
-
-    html,
-    body {
-      height: 100%;
+    :root {
+      --bg: #0b0f14;
+      --surface: #0f1720;
+      --surface2: #0f1a26;
+      --surface3: #111827;
+      --text: #e6eef8;
+      --text2: #a9b6c3;
+      --text3: #7f8b95;
+      --accent: #5f9dff;
+      --accent2: #9c75ff;
+      --border: rgba(255,255,255,0.06);
+      --border2: rgba(255,255,255,0.03);
+      --green: #34d399;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --transition: 0.18s ease;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    html, body {
+      background: var(--bg) !important;
+      color: var(--text) !important;
+      font-family: var(--sans) !important;
       overflow: hidden;
     }
-
-    body {
-      font-family: var(--sans);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    button {
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: inherit;
-      font: inherit;
-    }
-
-    input,
-    textarea,
-    select {
-      font: inherit;
-      color: inherit;
-      background: none;
-      border: none;
-      outline: none;
-    }
-
-    a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
     ::-webkit-scrollbar-thumb {
       background: var(--border2);
       border-radius: 9px;
     }
 
+    /* ─── Wiki TOC styles ───────────────────────────────── */
+    #wiki-toc {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--text2);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    }
+
+    #wiki-toc ul { list-style: none; margin: 8px 0 0 0; padding: 0; display:flex;flex-direction:column;gap:6px }
+    #wiki-toc li { margin: 0; }
+    #wiki-toc a { color: var(--text); text-decoration: none; font-weight:600; }
+    #wiki-toc a:hover { text-decoration: underline; }
+
     /* ─── Layout shell ───────────────────────────────── */
     #shell {
       display: grid;
-      grid-template-columns: 56px 240px 1fr;
+      grid-template-columns: 180px 260px 1fr;
       grid-template-rows: 100dvh;
       height: 100dvh;
     }
@@ -109,17 +89,17 @@
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 12px 0;
-      gap: 4px;
+      align-items: stretch;
+      padding: 18px 14px;
+      gap: 10px;
       z-index: 20;
     }
 
     .rail-logo {
-      width: 32px;
-      height: 32px;
-      background: transparent;
-      border-radius: 9px;
+      width: 100%;
+      min-height: 52px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -132,36 +112,60 @@
     .rail-logo img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-    }
-
-    margin-bottom: 12px;
-    letter-spacing: -1px;
-    flex-shrink: 0;
+      object-fit: contain;
     }
 
     .rail-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
+      width: 100%;
+      min-height: 48px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: var(--text3);
-      font-size: 17px;
-      transition: background var(--transition), color var(--transition);
-      position: relative;
+      justify-content: flex-start;
+      padding: 0 18px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      transition: all var(--transition);
+      border: 1px solid transparent;
+      background: var(--surface2);
+      box-shadow: inset 0 0 0 1px transparent;
+      text-align: left;
+      gap: 10px;
     }
 
     .rail-btn:hover {
-      background: var(--surface2);
-      color: var(--text2);
+      transform: translateX(2px);
+      background: var(--surface3);
+      color: var(--text);
     }
 
     .rail-btn.active {
-      background: var(--surface3);
-      color: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.12);
     }
+
+    .rail-btn.chat { background: rgba(94, 156, 255, 0.14); }
+    .rail-btn.research { background: rgba(165, 103, 255, 0.14); }
+    .rail-btn.arena { background: rgba(255, 153, 98, 0.14); }
+    .rail-btn.cookbook { background: rgba(43, 214, 162, 0.14); }
+    .rail-btn.editor { background: rgba(255, 199, 76, 0.14); }
+    .rail-btn.notes { background: rgba(255, 120, 198, 0.14); }
+    .rail-btn.email { background: rgba(136, 223, 255, 0.14); }
+    .rail-btn.calendar { background: rgba(151, 255, 166, 0.14); }
+    .rail-btn.wiki { background: rgba(125, 143, 255, 0.14); }
+    .rail-btn.settings { background: rgba(209, 213, 219, 0.14); }
+
+    .rail-btn.active.chat { background: #5f9dff; }
+    .rail-btn.active.research { background: #9c75ff; }
+    .rail-btn.active.arena { background: #ff9c4d; }
+    .rail-btn.active.cookbook { background: #2ed2a9; }
+    .rail-btn.active.editor { background: #ffcc3c; }
+    .rail-btn.active.notes { background: #ff79c4; }
+    .rail-btn.active.email { background: #88dfff; }
+    .rail-btn.active.calendar { background: #8cff92; }
+    .rail-btn.active.wiki { background: #7d8fff; }
+    .rail-btn.active.settings { background: #d1d5db; color: #111; }
 
     .rail-spacer {
       flex: 1;
@@ -180,7 +184,7 @@
 
     /* ─── Sidebar ────────────────────────────────────── */
     #sidebar {
-      background: rgba(19, 22, 27, 0.6);
+      min-height: 60px;
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -231,25 +235,27 @@
     }
 
     .chat-item {
-      padding: 8px 10px;
-      border-radius: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
       cursor: pointer;
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      transition: background var(--transition);
+      align-items: center;
+      gap: 10px;
+      transition: background var(--transition), transform var(--transition);
+      position: relative;
     }
 
     .chat-item:hover {
       background: var(--surface2);
+      transform: translateX(1px);
     }
 
     .chat-item.active {
-      background: var(--surface3);
+      background: rgba(94, 156, 255, 0.14);
     }
 
     .chat-item-icon {
-      font-size: 13px;
+      font-size: 14px;
       margin-top: 1px;
       color: var(--text3);
       flex-shrink: 0;
@@ -258,6 +264,26 @@
     .chat-item-body {
       flex: 1;
       min-width: 0;
+    }
+
+    .chat-item-delete {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      border: none;
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: background var(--transition), transform var(--transition);
+      flex-shrink: 0;
+    }
+
+    .chat-item-delete:hover {
+      background: rgba(220, 38, 38, 0.2);
+      transform: scale(1.04);
     }
 
     .chat-item-name {
@@ -315,6 +341,44 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .topbar-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      flex: none;
+      min-width: 0;
+    }
+
+    .topbar-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: var(--surface2);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .rail-lang-select {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 12px 14px;
+    }
+
+    .rail-lang-select select {
+      width: 100%;
+      appearance: none;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
     }
 
     .model-badge {
@@ -1377,6 +1441,69 @@
       color: var(--accent);
     }
 
+    .note-card-delete,
+    .doc-item-delete,
+    .email-delete-btn,
+    .cal-event-delete {
+      border: none;
+      background: transparent;
+      color: var(--text3);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .note-card-delete:hover,
+    .doc-item-delete:hover,
+    .email-delete-btn:hover,
+    .cal-event-delete:hover {
+      background: rgba(220, 38, 38, 0.12);
+      color: var(--red);
+    }
+
+    .doc-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .doc-item:hover {
+      background: var(--surface3);
+      border-color: var(--border2);
+    }
+
+    .doc-item.active {
+      background: rgba(94, 156, 255, 0.12);
+    }
+
+    .doc-item-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .doc-item-meta {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .cal-event {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
     /* ─── Email view ─────────────────────────────────── */
     #view-email {
       overflow: hidden;
@@ -2108,6 +2235,8 @@
       scrollbar-color: var(--border2) transparent;
     }
   </style>
+  </style>
+
   <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 
@@ -2125,17 +2254,25 @@
           style="display:none;width:100%;height:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));align-items:center;justify-content:center;">
           A</div>
       </div>
-      <button class="rail-btn active" data-view="chat" title="Chat" onclick="switchView('chat')">💬</button>
-      <button class="rail-btn" data-view="research" title="Deep Research" onclick="switchView('research')">🔬</button>
-      <button class="rail-btn" data-view="arena" title="Model Arena" onclick="switchView('arena')">⚔️</button>
-      <button class="rail-btn" data-view="cookbook" title="Model Cookbook" onclick="switchView('cookbook')">📚</button>
-      <button class="rail-btn" data-view="editor" title="Documents" onclick="switchView('editor')">📝</button>
-      <button class="rail-btn" data-view="notes" title="Notes & Tasks" onclick="switchView('notes')">📌</button>
-      <button class="rail-btn" data-view="email" title="Email" onclick="switchView('email')">📧</button>
-      <button class="rail-btn" data-view="calendar" title="Calendar" onclick="switchView('calendar')">📅</button>
-      <button class="rail-btn" data-view="wiki" title="User Manual (Wiki)" onclick="switchView('wiki')">📖</button>
+      <div class="rail-lang-select">
+        <select id="interface-lang" onchange="setInterfaceLanguage(this.value)" title="Select interface language">
+          <option value="en">English</option>
+          <option value="it">Italiano</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+        </select>
+      </div>
+      <button class="rail-btn active chat" data-view="chat" title="Chat" onclick="switchView('chat')">Chat</button>
+      <button class="rail-btn research" data-view="research" title="Deep Research" onclick="switchView('research')">Deep Research</button>
+      <button class="rail-btn arena" data-view="arena" title="Model Arena" onclick="switchView('arena')">Model Arena</button>
+      <button class="rail-btn cookbook" data-view="cookbook" title="Model Cookbook" onclick="switchView('cookbook')">Model Cookbook</button>
+      <button class="rail-btn editor" data-view="editor" title="Documents" onclick="switchView('editor')">Documents</button>
+      <button class="rail-btn notes" data-view="notes" title="Notes & Tasks" onclick="switchView('notes')">Notes & Tasks</button>
+      <button class="rail-btn email" data-view="email" title="Email" onclick="switchView('email')">Email</button>
+      <button class="rail-btn calendar" data-view="calendar" title="Calendar" onclick="switchView('calendar')">Calendar</button>
+      <button class="rail-btn wiki" data-view="wiki" title="User Manual" onclick="switchView('wiki')">User Manual</button>
       <div class="rail-spacer"></div>
-      <button class="rail-btn" data-view="settings" title="Settings" onclick="switchView('settings')">⚙️</button>
+      <button class="rail-btn settings" data-view="settings" title="Settings" onclick="switchView('settings')">Settings</button>
     </nav>
 
     <!-- SIDEBAR -->
@@ -2144,46 +2281,7 @@
         <span class="sidebar-title" id="sidebar-label">Chats</span>
         <button class="sidebar-action" onclick="newChat()" title="New chat">＋</button>
       </div>
-      <div id="sidebar-body">
-        <div class="section-label">Today</div>
-        <div class="chat-item active" onclick="loadChat(0)">
-          <span class="chat-item-icon">💬</span>
-          <div class="chat-item-body">
-            <div class="chat-item-name">Getting started</div>
-            <div class="chat-item-meta">Just now</div>
-          </div>
-        </div>
-        <div class="chat-item" onclick="loadChat(1)">
-          <span class="chat-item-icon">🤖</span>
-          <div class="chat-item-body">
-            <div class="chat-item-name">Python script for CSV analysis</div>
-            <div class="chat-item-meta">2h ago</div>
-          </div>
-        </div>
-        <div class="section-label">Yesterday</div>
-        <div class="chat-item" onclick="loadChat(2)">
-          <span class="chat-item-icon">🔬</span>
-          <div class="chat-item-body">
-            <div class="chat-item-name">Research: LLM inference optimization</div>
-            <div class="chat-item-meta">Yesterday</div>
-          </div>
-        </div>
-        <div class="chat-item" onclick="loadChat(3)">
-          <span class="chat-item-icon">📝</span>
-          <div class="chat-item-body">
-            <div class="chat-item-name">Draft blog post on local AI</div>
-            <div class="chat-item-meta">Yesterday</div>
-          </div>
-        </div>
-        <div class="section-label">This week</div>
-        <div class="chat-item" onclick="loadChat(4)">
-          <span class="chat-item-icon">🛠️</span>
-          <div class="chat-item-body">
-            <div class="chat-item-name">Refactor Node.js auth module</div>
-            <div class="chat-item-meta">Mon</div>
-          </div>
-        </div>
-      </div>
+      <div id="sidebar-body"></div>
     </aside>
 
     <!-- MAIN -->
@@ -2196,6 +2294,10 @@
           <span class="model-dot"></span>
           <span id="current-model-label">llama3.2:3b · Ollama</span>
           <span style="font-size:10px; color:var(--text3)">▾</span>
+        </div>
+        <div class="topbar-brand">
+          <img src="arx.png" alt="ArX" class="topbar-logo" onerror="this.style.display='none';" />
+          <span class="topbar-title" id="topbar-title">New Chat</span>
         </div>
         <button class="topbar-btn" title="Agent mode" onclick="toggleAgent()" id="agent-toggle-btn">🤖</button>
         <button class="topbar-btn" title="Share">⬆️</button>
@@ -2262,7 +2364,10 @@
               onkeydown="handleChatKey(event)" oninput="autoGrow(this)"></textarea>
             <div class="chat-input-footer">
               <span class="chat-hints text-dim text-xs" id="token-count">0 tokens</span>
-              <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">↑</button>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">↑</button>
+                <button class="send-btn" style="min-width:40px; padding:0 10px;" onclick="startVoiceDictation()" title="Dictate">🎙️</button>
+              </div>
             </div>
           </div>
         </div>
@@ -2461,9 +2566,9 @@
         <div class="editor-sidebar">
           <div class="sidebar-header">
             <span class="sidebar-title">Documents</span>
-            <button class="sidebar-action">＋</button>
+            <button class="sidebar-action" onclick="newDocument()">＋</button>
           </div>
-          <div id="sidebar-body" style="flex:1;overflow-y:auto;padding:8px;">
+          <div id="editor-doc-list" style="flex:1;overflow-y:auto;padding:8px;">
             <!-- Empty document list -->
           </div>
         </div>
@@ -2569,7 +2674,24 @@
         </div>
 
         <div style="max-width: 800px; display: flex; flex-direction: column; gap: 40px;">
-          
+          <section>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">🧭 Left Sidebar Menu</h2>
+            <div style="background: var(--surface2); padding: 22px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 18px rgba(0,0,0,0.08);">
+              <p style="margin-bottom: 16px; color: var(--text);">Use the left sidebar buttons to move between the main ArX-AI workspaces. Each button opens a dedicated workflow area with its own controls, content and AI tools.</p>
+              <ul style="padding-left: 20px; list-style-type: disc; display: flex; flex-direction: column; gap: 10px; color: var(--text2);">
+                <li><strong style="color: var(--text);">Chat:</strong> Start a conversation with your local AI models, type prompts, send messages, and enable Agent Mode for browser, file, or shell actions.</li>
+                <li><strong style="color: var(--text);">Deep Research:</strong> Run autonomous research jobs, search the web and arXiv, synthesise sources, and generate structured reports.</li>
+                <li><strong style="color: var(--text);">Model Arena:</strong> Compare two models side-by-side using the same prompt, vote blindly, and discover which model performs best.</li>
+                <li><strong style="color: var(--text);">Model Cookbook:</strong> Browse recommended local models, view hardware suggestions, and download models with one click.</li>
+                <li><strong style="color: var(--text);">Documents:</strong> Edit rich text documents, ask AI for rewrites, summaries, and grammar improvements, then save content directly into your workspace.</li>
+                <li><strong style="color: var(--text);">Notes & Tasks:</strong> Capture quick notes, manage todo lists, and let ArX extract action items from your chat or document content.</li>
+                <li><strong style="color: var(--text);">Email:</strong> Connect IMAP/SMTP accounts, draft replies, and let the AI help triage incoming messages.</li>
+                <li><strong style="color: var(--text);">Calendar:</strong> Review your schedule, create events, and manage tasks via CalDAV-compatible calendar integration.</li>
+                <li><strong style="color: var(--text);">User Manual:</strong> Opens this help page with step-by-step guides for every main feature.</li>
+                <li><strong style="color: var(--text);">Settings:</strong> Configure your local Ollama endpoint, API keys, integrations, and security options.</li>
+              </ul>
+            </div>
+          </section>
           <section>
             <h2 style="font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">💬 Chat & Agent Mode</h2>
             <div style="background: var(--surface2); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
@@ -2625,6 +2747,51 @@
               <p style="margin-bottom: 12px; color: var(--text);">Use the built-in rich text <strong>Editor</strong> to draft documents with the help of AI suggestions.</p>
               <p style="margin-bottom: 12px; color: var(--text);">Keep track of your ideas in <strong>Notes & Tasks</strong>.</p>
               <p style="color: var(--text);">Connect IMAP/CalDAV servers in the settings to let the AI triage your <strong>Email</strong> and organize your <strong>Calendar</strong>.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:12px">Reference: Buttons, Icons, and Controls</h2>
+            <div style="background:var(--surface2);padding:18px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+              <h3 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Sidebar</h3>
+              <ul style="line-height:1.6;margin-bottom:12px">
+                <li><strong>＋ (New):</strong> Create a new chat/document/note depending on the active view.</li>
+                <li><strong>× (Delete):</strong> Permanently removes the selected item from local storage. Use with caution.</li>
+                <li><strong>Language selector:</strong> Changes basic UI labels (sidebar buttons, topbar title).</li>
+              </ul>
+
+              <h3 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Topbar</h3>
+              <ul style="line-height:1.6;margin-bottom:12px">
+                <li><strong>Model Picker:</strong> Choose the model used for responses. Click the label to open the picker.</li>
+                <li><strong>Agent (🤖):</strong> Toggles Agent Mode to allow web/file/shell tools (requires proper configuration in Settings).</li>
+                <li><strong>Share:</strong> Export or share content from the current view.</li>
+              </ul>
+
+              <h3 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Chat input</h3>
+              <ul style="line-height:1.6">
+                <li><strong>Enter:</strong> Send message. <strong>Shift+Enter</strong> inserts a newline.</li>
+                <li><strong>🎙️ Voice:</strong> Start voice dictation. Click again to stop and submit.</li>
+                <li><strong>Token counter:</strong> Shows an approximate token usage for the current input.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:12px">Examples and Workflows</h2>
+            <div style="background:var(--surface2);padding:18px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+              <p style="margin-bottom:8px"><strong>Draft an email:</strong> In Chat ask "Draft a professional reply to this email summarising the key points." Copy the suggested reply into Email or click "Draft reply" from the email AI bar.</p>
+              <p style="margin-bottom:8px"><strong>Research to document:</strong> Use Deep Research to gather sources, then export the summary into Documents and refine with <em>AI suggest</em>.</p>
+              <p><strong>Meeting notes:</strong> After a chat, extract action items by asking the assistant to <em>"Extract action items"</em> and then save them to Notes or convert to Tasks.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size:20px;font-weight:700;color:var(--amber);margin-bottom:12px">Troubleshooting & Tips</h2>
+            <div style="background:var(--surface2);padding:18px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+              <p style="margin-bottom:8px"><strong>Voice not working?</strong> Ensure your browser supports the Web Speech API (Chrome/Edge). Grant microphone permissions and refresh.</p>
+              <p style="margin-bottom:8px"><strong>Models unreachable?</strong> Check the <strong>Ollama endpoint</strong> in Settings and verify the server is running (default: <code>http://localhost:11434</code>).</p>
+              <p style="margin-bottom:8px"><strong>Pyodide errors:</strong> First run downloads dependencies; wait a few seconds. If execution fails, open devtools to inspect console errors.</p>
+              <p style="margin-top:8px"><strong>Reset local data:</strong> To permanently remove all saved chats, notes, documents, emails and events, clear app storage in Settings or run <code>localStorage.removeItem('arx_state')</code> in the browser console and reload the page.</p>
             </div>
           </section>
 
@@ -2883,19 +3050,214 @@ open http://localhost:3000</pre>
       voiceMode: false,
       voiceContinuous: false,
       voiceLanguage: 'it-IT',
+      interfaceLanguage: 'en',
       voiceState: 'idle', // idle, listening, thinking, speaking
       activeTools: new Set(),
       currentModel: { id: 'llama3.2:3b', provider: 'Ollama', label: 'llama3.2:3b · Ollama' },
       messages: [],
+      activeChatId: 1,
+      chats: [
+        { id: 1, title: 'Getting started', meta: 'Just now', icon: '💬', section: 'Today' },
+        { id: 2, title: 'Python script for CSV analysis', meta: '2h ago', icon: '🤖', section: 'Today' },
+        { id: 3, title: 'Research: LLM inference optimization', meta: 'Yesterday', icon: '🔬', section: 'Yesterday' },
+        { id: 4, title: 'Draft blog post on local AI', meta: 'Yesterday', icon: '📝', section: 'Yesterday' },
+        { id: 5, title: 'Refactor Node.js auth module', meta: 'Mon', icon: '🛠️', section: 'This week' },
+      ],
+      activeDocId: 1,
+      documents: [
+        {
+          id: 1,
+          title: 'Untitled Document',
+          content: '<h1>Untitled Document</h1><p>Start typing your document here. ArX can help you with AI suggestions, grammar, tone improvements, and more.</p>',
+          date: 'Just now'
+        }
+      ],
+      notes: [],
+      tasks: [],
+      activeEmailId: null,
+      emails: [
+        { id: 1, from: 'Luca', subject: 'Welcome to ArX-AI', preview: 'Benvenuto in ArX-AI: ecco come iniziare...', body: 'Ciao! Questo è un esempio di email. Puoi eliminare questa email con il pulsante nella lista.', date: 'Today', unread: true },
+        { id: 2, from: 'AI Assistant', subject: 'Suggerimenti rapidi', preview: 'Usa il pulsante Voice per dettare i comandi direttamente nella chat.', body: 'Per cominciare, prova a dire: "Scrivi un elenco di cose da fare per il progetto".', date: 'Yesterday', unread: false }
+      ],
+      events: {
+        '2026-06-12': [{ id: 1, title: 'Team sync', color: 'green' }],
+      },
+      voiceTranscript: '',
+      recognition: null,
       calYear: 2026, calMonth: 5,
       researchPhase: 'idle',
       arenaModels: { a: 'llama3.2:3b', b: 'mistral:7b' },
       arenaRevealed: false,
-      notes: [],
-      tasks: [],
-      emails: [],
-      events: {},
     };
+
+    // Load persisted state from localStorage (keeps deletions persistent)
+    function loadState() {
+      try {
+        const s = localStorage.getItem('arx_state');
+        if (!s) return;
+        const parsed = JSON.parse(s);
+        if (parsed.chats) state.chats = parsed.chats;
+        if (parsed.documents) state.documents = parsed.documents;
+        if (parsed.notes) state.notes = parsed.notes;
+        if (parsed.emails) state.emails = parsed.emails;
+        if (parsed.events) state.events = parsed.events;
+      } catch (e) { console.error('loadState', e); }
+    }
+
+    function saveState() {
+      try {
+        const toSave = {
+          chats: state.chats,
+          documents: state.documents,
+          notes: state.notes,
+          emails: state.emails,
+          events: state.events
+        };
+        localStorage.setItem('arx_state', JSON.stringify(toSave));
+      } catch (e) { console.error('saveState', e); }
+    }
+
+    loadState();
+    // Manual content translations
+    const manualContent = {
+      en: `
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">🧭 Sidebar Overview</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Use the left sidebar to navigate between Chat, Deep Research, Model Arena, Documents, Notes, Email, Calendar and Settings. Each view exposes dedicated workflows and tools.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">💬 Chat</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>The Chat view is for conversations. Press the + button to create a new chat, use the microphone to dictate, and the agent toggle to enable tool access.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📄 Documents & Notes</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Create and edit documents with AI suggestions. Notes are lightweight items for quick capture; convert notes into documents when ready.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📧 Email & 📅 Calendar</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Configure IMAP/SMTP and CalDAV in Settings to sync mail and calendar. Use AI tools to summarise emails and extract action items.</p>
+          </div>
+        </section>
+      `,
+      it: `
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">🧭 Panoramica Sidebar</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Usa la barra sinistra per navigare tra Chat, Deep Research, Arena Modelli, Documenti, Note, Email, Calendario e Impostazioni. Ogni vista offre strumenti dedicati.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">💬 Chat</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>La vista Chat è per le conversazioni. Premi il pulsante + per creare una nuova chat, usa il microfono per dettare e il toggle agente per abilitare l'accesso agli strumenti.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📄 Documenti & Note</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Crea e modifica documenti con suggerimenti AI. Le note sono elementi leggeri per catturare idee rapidamente; convertile in documenti quando pronte.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📧 Email & 📅 Calendario</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Configura IMAP/SMTP e CalDAV in Impostazioni per sincronizzare posta e calendario. Usa gli strumenti AI per riassumere le email ed estrarre azioni.</p>
+          </div>
+        </section>
+      `,
+      es: `
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">🧭 Barra Lateral</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Usa la barra lateral para navegar entre Chat, Deep Research, Arena de Modelos, Documentos, Notas, Correo, Calendario y Ajustes. Cada vista tiene herramientas dedicadas.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">💬 Chat</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>La vista Chat es para conversaciones. Pulsa + para crear una nueva charla, usa el micrófono para dictar y el modo agente para habilitar herramientas.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📄 Documentos & Notas</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Crea y edita documentos con sugerencias AI. Las notas son para capturar ideas rápidamente; conviértelas en documentos cuando estén listas.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📧 Correo & 📅 Calendario</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Configura IMAP/SMTP y CalDAV en Ajustes para sincronizar correo y calendario. Usa las herramientas AI para resumir correos y extraer tareas.</p>
+          </div>
+        </section>
+      `,
+      fr: `
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">🧭 Barre latérale</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Utilisez la barre latérale pour naviguer entre Chat, Deep Research, Arena de Modèles, Documents, Notes, Email, Calendrier et Paramètres. Chaque vue propose des outils dédiés.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">💬 Chat</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>La vue Chat est pour les conversations. Cliquez sur + pour créer une nouvelle discussion, utilisez le micro pour dicter, et activez le mode agent pour accéder aux outils.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📄 Documents & Notes</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Créez et modifiez des documents avec des suggestions AI. Les notes servent à capturer des idées rapidement; convertissez-les en documents lorsque c'est prêt.</p>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📧 Email & 📅 Calendrier</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p>Configurez IMAP/SMTP et CalDAV dans les Paramètres pour synchroniser courrier et calendrier. Utilisez les outils AI pour résumer les emails et extraire des actions.</p>
+          </div>
+        </section>
+      `
+    };
+
+    function renderManual() {
+      const lang = state.interfaceLanguage || 'en';
+      const container = document.getElementById('wiki-content');
+      if (!container) return;
+      container.innerHTML = manualContent[lang] || manualContent['en'];
+
+      // Build dynamic TOC from H2 headings
+      try {
+        const headings = Array.from(container.querySelectorAll('h2'));
+        if (headings.length) {
+          const toc = document.createElement('div');
+          toc.id = 'wiki-toc';
+          const titleMap = { en: 'Contents', it: 'Contenuti', es: 'Contenido', fr: 'Contenu' };
+          const tocTitle = titleMap[state.interfaceLanguage] || titleMap['en'];
+          toc.innerHTML = `<strong style="font-size:13px">${tocTitle}</strong><ul></ul>`;
+          const ul = toc.querySelector('ul');
+          headings.forEach((h, i) => {
+            const text = h.textContent.trim();
+            const id = 'wiki-' + text.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/(^-|-$)/g, '') + '-' + i;
+            h.id = id;
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="#${id}" onclick="document.getElementById('${id}').scrollIntoView({behavior:'smooth'});return false;">${text}</a>`;
+            ul.appendChild(li);
+          });
+          // Insert TOC at top of container
+          container.insertBefore(toc, container.firstChild);
+        }
+      } catch (e) { console.error('renderManual TOC', e); }
+    }
+
+    // Initial render of manual
+    renderManual();
 
     const models = [
       { id: 'llama3.2:3b', name: 'Llama 3.2 3B', family: 'Meta · Ollama', icon: '🦙', tags: ['rec', 'fast'], desc: 'Fast, efficient 3B model. Ideal for quick tasks on any hardware.', size: '2.0 GB', ctx: '128k', speed: '45 tok/s', perf: 90, available: true },
@@ -2933,6 +3295,7 @@ open http://localhost:3000</pre>
       updateSidebarForView(v);
 
       if (v === 'cookbook') renderCookbook();
+      if (v === 'editor') renderEditorDocs();
       if (v === 'notes') renderNotes();
       if (v === 'email') renderEmail();
       if (v === 'calendar') renderCalendar();
@@ -2948,10 +3311,31 @@ open http://localhost:3000</pre>
       document.getElementById('shell').classList.toggle('sidebar-collapsed');
     }
 
+    function setInterfaceLanguage(lang) {
+      state.interfaceLanguage = lang;
+      const labels = {
+        en: { chat: 'Chat', research: 'Deep Research', arena: 'Model Arena', cookbook: 'Model Cookbook', editor: 'Documents', notes: 'Notes & Tasks', email: 'Email', calendar: 'Calendar', settings: 'Settings', sidebar: 'Chats', newChat: 'New Chat' },
+        it: { chat: 'Chat', research: 'Ricerca', arena: 'Arena Modelli', cookbook: 'Ricettario', editor: 'Documenti', notes: 'Note & Task', email: 'Email', calendar: 'Calendario', settings: 'Impostazioni', sidebar: 'Chat', newChat: 'Nuova chat' },
+        es: { chat: 'Chat', research: 'Investigación', arena: 'Arena de Modelos', cookbook: 'Manual', editor: 'Documentos', notes: 'Notas & Tareas', email: 'Correo', calendar: 'Calendario', settings: 'Ajustes', sidebar: 'Chats', newChat: 'Nuevo chat' },
+        fr: { chat: 'Chat', research: 'Recherche', arena: 'Arène', cookbook: 'Recettes', editor: 'Documents', notes: 'Notes & Tâches', email: 'Email', calendar: 'Calendrier', settings: 'Paramètres', sidebar: 'Discussions', newChat: 'Nouveau chat' }
+      };
+      const langLabels = labels[lang] || labels.en;
+      document.querySelectorAll('.rail-btn').forEach(btn => {
+        const view = btn.dataset.view;
+        if (view && langLabels[view]) btn.textContent = langLabels[view];
+      });
+      document.getElementById('sidebar-label').textContent = langLabels.sidebar;
+      document.getElementById('topbar-title').textContent = langLabels.newChat;
+      renderChatSidebar();
+      renderManual();
+    }
+
     /* ═══════════════════════════════════════════════════
        CHAT
     ═══════════════════════════════════════════════════ */
     function newChat() {
+      state.activeChatId = null;
+      renderChatSidebar();
       state.messages = [];
       const msgs = document.getElementById('chat-messages');
       msgs.innerHTML = document.getElementById('welcome').outerHTML.replace('display:none', '');
@@ -2984,6 +3368,45 @@ open http://localhost:3000</pre>
 
     function handleChatKey(e) {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    function renderChatSidebar() {
+      const body = document.getElementById('sidebar-body');
+      if (!body) return;
+      const sections = ['Today', 'Yesterday', 'This week'];
+      body.innerHTML = sections.map(section => {
+        const items = state.chats.filter(chat => chat.section === section);
+        if (!items.length) return '';
+        return `<div class="section-label">${section}</div>` + items.map(chat => {
+          const activeClass = chat.id === state.activeChatId ? ' active' : '';
+          return `
+            <div class="chat-item${activeClass}" onclick="loadChat(${chat.id})">
+              <span class="chat-item-icon">${chat.icon}</span>
+              <div class="chat-item-body">
+                <div class="chat-item-name">${chat.title}</div>
+                <div class="chat-item-meta">${chat.meta}</div>
+              </div>
+              <button class="chat-item-delete" onclick="deleteChat(event, ${chat.id})" title="Delete chat">×</button>
+            </div>`;
+        }).join('');
+      }).join('');
+    }
+
+    function deleteChat(event, id) {
+      event.stopPropagation();
+      const idx = state.chats.findIndex(chat => chat.id === id);
+      if (idx === -1) return;
+      const wasActive = state.activeChatId === id;
+      state.chats.splice(idx, 1);
+      if (wasActive) {
+        state.activeChatId = state.chats.length ? state.chats[0].id : null;
+        if (state.activeChatId === null) {
+          newChat();
+        }
+      }
+      renderChatSidebar();
+      saveState();
+      toast('Chat rimossa', 'success');
     }
 
     function autoGrow(el) {
@@ -3316,6 +3739,14 @@ open http://localhost:3000</pre>
       } else if (state.voiceState === 'listening') {
         stopRecognition(true);
       }
+    }
+
+    function startVoiceDictation() {
+      if (!state.voiceMode) toggleVoiceMode();
+      state.voiceTranscript = '';
+      const ui = document.getElementById('voice-transcript');
+      if (ui) ui.textContent = '';
+      startRecognition();
     }
 
 function startRecognition() {
@@ -3773,7 +4204,15 @@ function startRecognition() {
       state.notes.forEach(n => {
         const card = document.createElement('div');
         card.className = 'note-card';
-        card.innerHTML = `<div class="note-card-title">${n.title}</div><div class="note-card-body">${n.body.replace(/\n/g, '<br>')}</div><div class="note-card-date">${n.date}</div>`;
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;gap:10px;">
+            <div style="flex:1;min-width:0;">
+              <div class="note-card-title">${n.title}</div>
+              <div class="note-card-body">${n.body.replace(/\n/g, '<br>')}</div>
+            </div>
+            <button class="note-card-delete" onclick="deleteNote(event, ${n.id})" title="Elimina nota">×</button>
+          </div>
+          <div class="note-card-date">${n.date}</div>`;
         card.onclick = () => openNoteModal(n);
         grid.appendChild(card);
       });
@@ -3788,6 +4227,7 @@ function startRecognition() {
       const id = Date.now();
       state.notes.unshift({ id, title: 'New note', body: '', date: 'Just now' });
       renderNotes();
+      saveState();
       toast('Note created', 'success');
     }
 
@@ -3797,18 +4237,33 @@ function startRecognition() {
 
     function switchNotesTab(tab) { toast('Tab: ' + tab, 'info'); }
 
+    function deleteNote(event, id) {
+      event.stopPropagation();
+      const idx = state.notes.findIndex(n => n.id === id);
+      if (idx === -1) return;
+      state.notes.splice(idx, 1);
+      renderNotes();
+      saveState();
+      toast('Nota eliminata', 'success');
+    }
+
     /* ═══════════════════════════════════════════════════
        EMAIL
     ═══════════════════════════════════════════════════ */
     function renderEmail() {
       const list = document.getElementById('email-list-items');
       list.innerHTML = state.emails.map(e => `
-    <div class="email-item ${e.unread ? 'unread' : ''}" onclick="openEmail(${e.id})">
+    <div class="email-item ${e.unread ? 'unread' : ''} ${state.activeEmailId === e.id ? 'active' : ''}" onclick="openEmail(${e.id})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
-        <div class="email-from">${e.from}</div>
-        ${e.unread ? '<div class="unread-dot"></div>' : ''}
+        <div>
+          <div class="email-from">${e.from}</div>
+          <div class="email-subject">${e.subject}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${e.unread ? '<div class="unread-dot"></div>' : ''}
+          <button class="email-delete-btn" onclick="deleteEmail(event, ${e.id})" title="Elimina email">×</button>
+        </div>
       </div>
-      <div class="email-subject">${e.subject}</div>
       <div class="email-meta"><span>${e.preview.substring(0, 45)}…</span><span>${e.date}</span></div>
     </div>`).join('');
     }
@@ -3816,13 +4271,19 @@ function startRecognition() {
     function openEmail(id) {
       const email = state.emails.find(e => e.id === id);
       if (!email) return;
+      state.activeEmailId = id;
       email.unread = false;
       renderEmail();
       const pane = document.getElementById('email-pane');
       pane.innerHTML = `
     <div class="email-thread-header">
-      <div class="email-thread-subject">${email.subject}</div>
-      <div class="email-thread-meta">From <strong>${email.from}</strong> · ${email.date}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div class="email-thread-subject">${email.subject}</div>
+          <div class="email-thread-meta">From <strong>${email.from}</strong> · ${email.date}</div>
+        </div>
+        <button class="email-delete-btn" onclick="deleteEmail(event, ${email.id})" title="Elimina email">Elimina</button>
+      </div>
     </div>
     <div class="email-thread-body">
       <div class="email-body-text">${email.body.replace(/\n/g, '<br>')}</div>
@@ -3834,6 +4295,27 @@ function startRecognition() {
       <button class="btn btn-sm btn-ghost" onclick="emailAI('todo')">Extract to-dos</button>
       <button class="btn btn-sm btn-ghost" onclick="emailAI('archive')">Archive + label</button>
     </div>`;
+    }
+
+    function deleteEmail(event, id) {
+      event.stopPropagation();
+      const idx = state.emails.findIndex(e => e.id === id);
+      if (idx === -1) return;
+      const removingActive = state.activeEmailId === id;
+      state.emails.splice(idx, 1);
+      if (removingActive) {
+        state.activeEmailId = null;
+        const pane = document.getElementById('email-pane');
+        if (pane) pane.innerHTML = `
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text3);">
+        <div style="font-size:32px">📧</div>
+        <div style="font-size:14px">Select an email to read</div>
+        <div style="font-size:12px">Connect IMAP in Settings → Email</div>
+      </div>`;
+      }
+      renderEmail();
+      saveState();
+      toast('Email eliminata', 'success');
     }
 
     function emailAI(action) {
@@ -3868,7 +4350,11 @@ function startRecognition() {
         cell.className = 'cal-day' + (isCurrentMonth && today.getDate() === d ? ' today' : '');
         const dateKey = `${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const eventsForDay = state.events[dateKey] || [];
-        cell.innerHTML = `<div class="cal-day-num">${d}</div>` + eventsForDay.map(e => `<div class="cal-event ${e.color}">${e.title}</div>`).join('');
+        cell.innerHTML = `<div class="cal-day-num">${d}</div>` + eventsForDay.map(e => `
+          <div class="cal-event ${e.color}" onclick="deleteCalendarEvent(event, '${dateKey}', ${e.id})">
+            <span>${e.title}</span>
+            <button class="cal-event-delete" title="Elimina evento">×</button>
+          </div>`).join('');
         cell.onclick = () => newEvent(dateKey);
         grid.appendChild(cell);
       }
@@ -3876,12 +4362,80 @@ function startRecognition() {
 
     function calPrev() { state.calMonth--; if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; } renderCalendar(); }
     function calNext() { state.calMonth++; if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; } renderCalendar(); }
-    function newEvent(date) { toast('New event on ' + (date || 'selected date'), 'info'); }
+    function newEvent(date) {
+      const title = prompt('Titolo evento', 'Nuovo evento');
+      if (!title) return;
+      const dateKey = date || prompt('Inserisci data evento (YYYY-MM-DD)', '2026-06-12');
+      if (!dateKey) return;
+      const id = Date.now();
+      state.events[dateKey] = state.events[dateKey] || [];
+      state.events[dateKey].push({ id, title, color: 'green' });
+      renderCalendar();
+      saveState();
+      toast('Evento creato', 'success');
+    }
+    function deleteCalendarEvent(event, dateKey, id) {
+      event.stopPropagation();
+      const list = state.events[dateKey] || [];
+      state.events[dateKey] = list.filter(e => e.id !== id);
+      if (!state.events[dateKey].length) delete state.events[dateKey];
+      renderCalendar();
+      saveState();
+      toast('Evento eliminato', 'success');
+    }
     function syncCaldav() { toast('CalDAV sync — configure server in Settings', 'info'); }
 
     /* ═══════════════════════════════════════════════════
        EDITOR
     ═══════════════════════════════════════════════════ */
+    function renderEditorDocs() {
+      const list = document.getElementById('editor-doc-list');
+      if (!list) return;
+      list.innerHTML = state.documents.map(doc => `
+        <div class="doc-item ${state.activeDocId === doc.id ? 'active' : ''}" onclick="selectDoc(${doc.id})">
+          <div>
+            <div class="doc-item-title">${doc.title}</div>
+            <div class="doc-item-meta">${doc.date}</div>
+          </div>
+          <button class="doc-item-delete" onclick="deleteDoc(event, ${doc.id})">×</button>
+        </div>`).join('');
+      const active = state.documents.find(d => d.id === state.activeDocId) || state.documents[0];
+      if (active) {
+        state.activeDocId = active.id;
+        const editor = document.getElementById('editor-content');
+        if (editor) editor.innerHTML = active.content;
+      }
+    }
+
+    function newDocument() {
+      addDoc();
+    }
+
+    function selectDoc(id) {
+      const doc = state.documents.find(d => d.id === id);
+      if (!doc) return;
+      state.activeDocId = id;
+      renderEditorDocs();
+    }
+
+    function deleteDoc(event, id) {
+      event.stopPropagation();
+      state.documents = state.documents.filter(d => d.id !== id);
+      if (state.activeDocId === id) state.activeDocId = state.documents.length ? state.documents[0].id : null;
+      renderEditorDocs();
+      saveState();
+      toast('Documento eliminato', 'success');
+    }
+
+    function addDoc() {
+      const id = Date.now();
+      state.documents.unshift({ id, title: 'Untitled Document', content: '<p>Start writing...</p>', date: 'Just now' });
+      state.activeDocId = id;
+      renderEditorDocs();
+      saveState();
+      toast('Documento aggiunto', 'success');
+    }
+
     function editorChanged() { /* debounce AI suggestions */ }
 
     async function aiEditorSuggest() {
@@ -4064,10 +4618,26 @@ if 'plt' in locals() or 'plt' in globals() or 'matplotlib' in sys.modules:
     ═══════════════════════════════════════════════════ */
     function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    function loadChat(idx) {
-      document.querySelectorAll('.chat-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+    function loadChat(chatId) {
+      if (chatId === 0) {
+        state.activeChatId = null;
+        renderChatSidebar();
+        switchView('chat');
+        newChat();
+        return;
+      }
+      const chat = state.chats.find(c => c.id === chatId);
+      if (!chat) {
+        state.activeChatId = null;
+        renderChatSidebar();
+        switchView('chat');
+        newChat();
+        return;
+      }
+      state.activeChatId = chatId;
+      renderChatSidebar();
       switchView('chat');
-      if (idx === 0) newChat();
+      newChat();
     }
 
     /* ═══════════════════════════════════════════════════
@@ -4083,6 +4653,7 @@ if 'plt' in locals() or 'plt' in globals() or 'matplotlib' in sys.modules:
       // Auto-resize textarea on input
       document.getElementById('chat-input').addEventListener('input', function () { autoGrow(this); updateTokenCount(); });
       document.getElementById('arena-input').addEventListener('input', function () { autoGrow(this); });
+      renderChatSidebar();
 
       // Detect Ollama and pre-select first installed model
       const ollamaModels = await fetchOllamaModels();
