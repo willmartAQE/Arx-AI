@@ -427,12 +427,18 @@
     .view {
       display: none !important;
       flex: 1;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       flex-direction: column;
     }
 
     .view.active {
       display: flex !important;
+    }
+
+    #view-wiki {
+      padding: 28px 32px;
+      background: var(--bg);
     }
 
     /* ─── Chat view ──────────────────────────────────── */
