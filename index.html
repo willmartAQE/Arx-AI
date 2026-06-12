@@ -3138,25 +3138,171 @@ open http://localhost:3000</pre>
         <section>
           <h2 style="font-size:20px;font-weight:700;color:var(--accent);">🧭 Sidebar Overview</h2>
           <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
-            <p>Use the left sidebar to navigate between Chat, Deep Research, Model Arena, Documents, Notes, Email, Calendar and Settings. Each view exposes dedicated workflows and tools.</p>
+            <p><strong>Navigation Hub:</strong> The left sidebar provides access to all major features. Each button opens a dedicated view with specific workflows.</p>
+            <ul style="margin-top:8px;margin-left:20px;color:var(--text2)">
+              <li><strong>Chat:</strong> Real-time AI conversations with agent & voice modes</li>
+              <li><strong>Deep Research:</strong> Multi-source research aggregation with AI analysis</li>
+              <li><strong>Model Arena:</strong> Blind A/B comparison between different models</li>
+              <li><strong>Model Cookbook:</strong> Browse and manage local & cloud models</li>
+              <li><strong>Documents:</strong> Rich document editing with AI suggestions</li>
+              <li><strong>Notes & Tasks:</strong> Quick capture and task organization</li>
+              <li><strong>Email:</strong> IMAP-synced inbox with AI summarization</li>
+              <li><strong>Calendar:</strong> CalDAV-synced calendar with event management</li>
+              <li><strong>Settings:</strong> Configure APIs, services, and preferences</li>
+            </ul>
           </div>
         </section>
         <section>
-          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">💬 Chat</h2>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">💬 Chat: Real-Time Conversations</h2>
           <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
-            <p>The Chat view is for conversations. Press the + button to create a new chat, use the microphone to dictate, and the agent toggle to enable tool access.</p>
+            <p><strong>Main Features:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>New Chat:</strong> Press + or click "New Chat" to start a conversation</li>
+              <li><strong>Chat History:</strong> Organized into Today, Yesterday, This week sections</li>
+              <li><strong>Delete Chat:</strong> Click × next to any chat to permanently remove it</li>
+              <li><strong>Agent Mode:</strong> Toggle to enable web search, memory, and skill access</li>
+              <li><strong>Swarm Mode:</strong> Multi-agent collaboration (Researcher → Writer → Reviewer)</li>
+              <li><strong>Voice Dictation:</strong> Click microphone icon to speak commands directly</li>
+              <li><strong>Token Counter:</strong> Real-time token usage estimate for current input</li>
+              <li><strong>Model Selection:</strong> Click model dropdown to switch between Ollama/Cloud models</li>
+              <li><strong>Python Execution:</strong> Run code blocks directly in chat with matplotlib support</li>
+            </ul>
           </div>
         </section>
         <section>
-          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📄 Documents & Notes</h2>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📄 Documents: Rich Text Editing</h2>
           <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
-            <p>Create and edit documents with AI suggestions. Notes are lightweight items for quick capture; convert notes into documents when ready.</p>
+            <p><strong>Document Management:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>Create Document:</strong> Click + to add a new blank document</li>
+              <li><strong>Edit:</strong> Use the rich editor with AI suggestions</li>
+              <li><strong>Delete:</strong> Click × button next to any document to remove it</li>
+              <li><strong>Auto-Save:</strong> Documents persist to browser storage automatically</li>
+              <li><strong>AI Suggestions:</strong> Click "Get AI Suggestions" for tone, clarity, and style improvements</li>
+              <li><strong>Convert to Chat:</strong> Export document content to chat for discussion</li>
+            </ul>
           </div>
         </section>
         <section>
-          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📧 Email & 📅 Calendar</h2>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📝 Notes & Tasks: Quick Capture</h2>
           <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
-            <p>Configure IMAP/SMTP and CalDAV in Settings to sync mail and calendar. Use AI tools to summarise emails and extract action items.</p>
+            <p><strong>Lightweight Organization:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>New Note:</strong> Click + or the "New note" card to create quickly</li>
+              <li><strong>Organize:</strong> Group notes into Collections using tabs</li>
+              <li><strong>Delete Note:</strong> Click × to permanently remove a note</li>
+              <li><strong>Convert:</strong> Convert notes to documents when they need more structure</li>
+              <li><strong>Search:</strong> Find notes using the search box at the top</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📧 Email: Sync & Analyze</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Email Management:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>Configure:</strong> Go to Settings → Email to add IMAP/SMTP credentials</li>
+              <li><strong>Sync:</strong> Emails sync automatically from your configured accounts</li>
+              <li><strong>Read Email:</strong> Click any email in the list to view full content</li>
+              <li><strong>Delete:</strong> Click × to remove an email from your workspace</li>
+              <li><strong>Mark as Read/Unread:</strong> Click an email to toggle read status</li>
+              <li><strong>AI Tools:</strong> After selecting an email, use Summarise, Draft Reply, Extract To-Dos, or Archive</li>
+              <li><strong>Search:</strong> Use the search box to find emails by keywords</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📅 Calendar: Event Tracking</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Calendar Operations:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>View:</strong> Browse events for the current month</li>
+              <li><strong>Create Event:</strong> Click on a date to create a new event</li>
+              <li><strong>Edit Event:</strong> Click on any event to modify title or date</li>
+              <li><strong>Delete Event:</strong> Click × on an event to remove it</li>
+              <li><strong>Navigate:</strong> Use arrow buttons to jump to previous/next month</li>
+              <li><strong>Sync CalDAV:</strong> Configure in Settings to sync with external calendars</li>
+              <li><strong>Event Color:</strong> Assign colors (green/amber) to events for organization</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">🔬 Deep Research: Multi-Source Analysis</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Research Workflow:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>Enter Query:</strong> Type your research question in the text area</li>
+              <li><strong>Select Sources:</strong> Choose from Web, arXiv, Wikipedia, and more</li>
+              <li><strong>Start Search:</strong> Click "Search" to gather sources and analyze</li>
+              <li><strong>Review Sources:</strong> Evaluate collected sources and snippets</li>
+              <li><strong>Generate Report:</strong> Click "Generate Report" to create an AI-powered analysis</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">⚔️ Model Arena: Blind A/B Testing</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Model Comparison:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>Send Message:</strong> Type a prompt to send to both models simultaneously</li>
+              <li><strong>Compare Responses:</strong> See side-by-side results from Model A and Model B</li>
+              <li><strong>Vote:</strong> Click "Vote A" or "Vote B" to record your preference</li>
+              <li><strong>Reveal Models:</strong> Click "Reveal" to see which models you were comparing</li>
+              <li><strong>Reset:</strong> Start a new comparison with fresh prompts</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">📚 Model Cookbook: Manage Models</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Model Management:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>View Installed:</strong> See all models currently installed via Ollama</li>
+              <li><strong>Download Model:</strong> Click ⬇ Download button to pull new models from Ollama registry</li>
+              <li><strong>Use Model:</strong> Click "Use now →" to select a model for chat</li>
+              <li><strong>View Details:</strong> Get spec info: size, context length, performance</li>
+              <li><strong>Refresh:</strong> Click refresh button to scan Ollama for new models</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">⚙️ Settings: Configuration Hub</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Configuration Options:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>Ollama Endpoint:</strong> Set local Ollama server URL (default: http://localhost:11434)</li>
+              <li><strong>OpenAI API Key:</strong> Add your sk-... key for GPT-4o access</li>
+              <li><strong>OpenRouter Key:</strong> Use multiple cloud models via OpenRouter</li>
+              <li><strong>Anthropic Key:</strong> Add Claude API key for Anthropic models</li>
+              <li><strong>Email Config:</strong> Set IMAP/SMTP servers and credentials</li>
+              <li><strong>CalDAV Config:</strong> Connect to calendar services (Nextcloud, etc)</li>
+              <li><strong>Default Model:</strong> Choose which model loads on startup</li>
+              <li><strong>Save Settings:</strong> Click "Save Settings" after making changes</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">🎙️ Voice Features: Voice Dictation & TTS</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Voice Capabilities:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>Dictate in Chat:</strong> Click microphone icon to dictate messages</li>
+              <li><strong>Continuous Mode:</strong> Enable checkbox to keep listening after each phrase</li>
+              <li><strong>Language:</strong> Select language for speech recognition (English, Italian, Spanish, French)</li>
+              <li><strong>AI Voice Response:</strong> Responses are read aloud if voice mode is active</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <h2 style="font-size:20px;font-weight:700;color:var(--accent);">💾 Data Persistence & Storage</h2>
+          <div style="background:var(--surface2);padding:16px;border-radius:12px;border:1px solid var(--border);color:var(--text2)">
+            <p><strong>Data Management:</strong></p>
+            <ul style="margin:8px 0 0 20px;color:var(--text2)">
+              <li><strong>Auto-Save:</strong> All chats, documents, notes, events are saved to browser storage</li>
+              <li><strong>Persistent Deletions:</strong> Deleted items stay deleted across sessions</li>
+              <li><strong>Local Storage:</strong> Data stored in localStorage — never sent to external servers</li>
+              <li><strong>Browser-Based:</strong> Clear browser data to reset all ArX-AI data</li>
+            </ul>
           </div>
         </section>
       `,
