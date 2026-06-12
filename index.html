@@ -314,7 +314,8 @@
     #main {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       position: relative;
     }
 
@@ -434,11 +435,6 @@
 
     .view.active {
       display: flex !important;
-    }
-
-    #view-wiki {
-      padding: 28px 32px;
-      background: var(--bg);
     }
 
     /* ─── Chat view ──────────────────────────────────── */
