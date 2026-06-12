@@ -643,6 +643,9 @@
       font-size: 15px;
       line-height: 1.5;
       color: var(--text);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
       resize: vertical;
       min-height: 50px;
       max-height: 400px;
@@ -1231,7 +1234,7 @@
 
     .research-query-input {
       width: 100%;
-      background: var(--surface3);
+      background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 12px 14px;
@@ -1358,6 +1361,17 @@
       font-size: 13px;
       color: var(--text);
       resize: none;
+    }
+
+    input, textarea, select {
+      background: var(--surface2) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent) !important;
+      outline: none;
     }
 
     .reveal-btn {
@@ -1788,7 +1802,7 @@
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      background: #fff;
+      background: var(--text);
       top: 2px;
       left: 2px;
       transition: left var(--transition);
@@ -1799,7 +1813,7 @@
     }
 
     .settings-input {
-      background: var(--surface3);
+      background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 7px;
       padding: 6px 10px;
@@ -4575,7 +4589,7 @@ if 'plt' in locals() or 'plt' in globals() or 'matplotlib' in sys.modules:
         lines.forEach(line => {
           if (line.startsWith('[[PLOT_B64:')) {
             const b64 = line.substring(11, line.length - 2);
-            finalHtml += `<img src="data:image/png;base64,${b64}" style="max-width: 100%; border-radius: 8px; margin-top: 8px; background: white; padding: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" />`;
+            finalHtml += `<img src="data:image/png;base64,${b64}" style="max-width: 100%; border-radius: 8px; margin-top: 8px; background: var(--surface2); padding: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" />`;
           } else if (line.trim()) {
             finalHtml += `<div>${line.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
           }
