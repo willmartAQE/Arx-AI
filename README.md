@@ -30,6 +30,18 @@ ArX-AI isn't just another chat wrapper. It's an entire ecosystem built around lo
 - **Rich Markdown & Code:** Full support for syntax highlighting, making it perfect for developers.
 - **Agent Mode:** Equip your AI with real tools! Let it browse the web (privately), read/write files on your computer, or even run sandboxed shell commands.
 
+### 🐝 Swarm Mode (Multi-Agent)
+- Activate a collaborative workflow where a **Researcher**, a **Writer**, and a **Reviewer** agent work together autonomously to solve complex prompts and output a polished final result.
+
+### 🎙️ Voice Mode (Jarvis)
+- Talk to your AI! A stunning interactive green orb listens to your voice commands, processes them, and replies with synthesized speech. It's like having your own personal Jarvis.
+
+### 🐍 Embedded Python Interpreter
+- Run Python code directly in the browser. When the AI generates a Python script, click **Run** to execute it instantly in a secure WebAssembly environment, complete with `matplotlib` graph support!
+
+### 📖 Built-in Wiki Manual
+- Not sure how a feature works? ArX includes a comprehensive, beautifully formatted User Manual accessible right from the sidebar.
+
 ### 📚 Model Cookbook & One-Click Downloads
 - **Hardware Auto-Detect:** ArX-AI analyzes your system's RAM and GPU to recommend the perfect models for your specific hardware.
 - **One-Click Pull:** Download and manage models directly from the UI. No more typing commands in the terminal!

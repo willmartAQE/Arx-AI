@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ArX — Local AI Workspace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ─── Design tokens ─────────────────────────────── */
     :root {
@@ -23,7 +24,7 @@
       --text2: #8b93a8;
       --text3: #5a6178;
       --mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       --radius: 10px;
       --radius2: 16px;
       --shadow: 0 4px 24px rgba(0, 0, 0, .45);
@@ -179,8 +180,10 @@
 
     /* ─── Sidebar ────────────────────────────────────── */
     #sidebar {
-      background: var(--surface);
-      border-right: 1px solid var(--border);
+      background: rgba(19, 22, 27, 0.6);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -293,12 +296,15 @@
     #topbar {
       height: 48px;
       flex-shrink: 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       display: flex;
       align-items: center;
       padding: 0 16px;
       gap: 10px;
-      background: var(--surface);
+      background: rgba(19, 22, 27, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 10;
     }
 
     .topbar-title {
@@ -435,14 +441,15 @@
     .msg-bubble {
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 16px;
+      border-radius: 16px;
+      padding: 14px 18px;
       font-size: 15px;
       line-height: 1.7;
       color: var(--text);
       overflow-wrap: break-word;
       word-wrap: break-word;
       word-break: break-word;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
 
     .msg-row.user .msg-bubble {
@@ -743,6 +750,192 @@
       font-size: 11px;
       color: var(--text3);
       margin-top: 2px;
+    }
+
+    /* ─── Voice Mode Overlay (Jarvis) ────────────────── */
+    #voice-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(13, 15, 18, 0.85);
+      backdrop-filter: blur(16px);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity var(--transition), visibility var(--transition);
+      opacity: 0;
+      visibility: hidden;
+      border-radius: var(--radius2);
+    }
+    
+    #voice-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .voice-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .voice-close-btn:hover {
+      background: var(--red);
+      color: var(--bg);
+      border-color: var(--red);
+      transform: scale(1.1);
+    }
+    
+    .jarvis-orb-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .jarvis-orb {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 210, 255, 0.8) 0%, rgba(0, 118, 255, 0.3) 70%, transparent 100%);
+      box-shadow: 0 0 50px rgba(0, 210, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4);
+      position: relative;
+      transition: all 0.5s ease-in-out;
+    }
+    
+    /* Breathing animation for idle state */
+    @keyframes orb-breathe {
+      0%, 100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 40px rgba(139, 92, 246, 0.4); }
+      50% { transform: scale(1.08); opacity: 1; box-shadow: 0 0 60px rgba(139, 92, 246, 0.6); }
+    }
+    
+    /* Listening pulse animation */
+    @keyframes orb-listen {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(52, 211, 153, 0.4); }
+      50% { transform: scale(1.15); box-shadow: 0 0 80px rgba(52, 211, 153, 0.8), 0 0 20px rgba(52, 211, 153, 0.3); }
+    }
+    
+    /* Thinking animation */
+    @keyframes orb-think {
+      0% { transform: rotate(0deg) scale(1.02); box-shadow: 0 0 50px rgba(251, 191, 36, 0.5); }
+      50% { transform: rotate(180deg) scale(0.98); box-shadow: 0 0 30px rgba(251, 191, 36, 0.3); }
+      100% { transform: rotate(360deg) scale(1.02); box-shadow: 0 0 50px rgba(251, 191, 36, 0.5); }
+    }
+    
+    /* Speaking animation */
+    @keyframes orb-speak {
+      0%, 100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(244, 63, 94, 0.5); }
+      50% { transform: scale(1.25); box-shadow: 0 0 90px rgba(244, 63, 94, 0.9), 0 0 30px rgba(244, 63, 94, 0.4); }
+    }
+    
+    .jarvis-orb.idle {
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, rgba(99, 102, 241, 0.3) 70%, transparent 100%);
+      animation: orb-breathe 3s infinite ease-in-out;
+    }
+    
+    .jarvis-orb.listening {
+      background: radial-gradient(circle, rgba(52, 211, 153, 0.8) 0%, rgba(16, 185, 129, 0.3) 70%, transparent 100%);
+      animation: orb-listen 1.5s infinite ease-in-out;
+    }
+    
+    .jarvis-orb.thinking {
+      background: radial-gradient(circle, rgba(251, 191, 36, 0.8) 0%, rgba(217, 119, 6, 0.3) 70%, transparent 100%);
+      animation: orb-think 2s infinite linear;
+    }
+    
+    .jarvis-orb.speaking {
+      background: radial-gradient(circle, rgba(244, 63, 94, 0.8) 0%, rgba(225, 29, 72, 0.3) 70%, transparent 100%);
+      animation: orb-speak 1s infinite ease-in-out;
+    }
+    
+    /* Wave rings */
+    .orb-ring {
+      position: absolute;
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    
+    @keyframes ring-expand {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    
+    .jarvis-orb-container.active-waves .orb-ring {
+      animation: ring-expand 2s infinite linear;
+    }
+    
+    .jarvis-orb-container.active-waves .orb-ring:nth-child(1) {
+      animation-delay: 0s;
+    }
+    
+    .jarvis-orb-container.active-waves .orb-ring:nth-child(2) {
+      animation-delay: 0.6s;
+    }
+    
+    .jarvis-orb-container.active-waves .orb-ring:nth-child(3) {
+      animation-delay: 1.2s;
+    }
+    
+    .voice-status-text {
+      margin-top: 24px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      min-height: 24px;
+    }
+    
+    .voice-transcript-box {
+      margin-top: 16px;
+      max-width: 80%;
+      font-size: 13px;
+      color: var(--text2);
+      text-align: center;
+      font-style: italic;
+      min-height: 20px;
+      line-height: 1.5;
+    }
+
+    .switch input:checked + .slider {
+      background-color: var(--accent);
+    }
+    .switch input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 4px;
+      bottom: 4px;
+      background-color: var(--text);
+      transition: .4s;
+      border-radius: 50%;
     }
 
     /* ─── Cookbook view ──────────────────────────────── */
@@ -1915,6 +2108,7 @@
       scrollbar-color: var(--border2) transparent;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 
 <body>
@@ -1939,6 +2133,7 @@
       <button class="rail-btn" data-view="notes" title="Notes & Tasks" onclick="switchView('notes')">📌</button>
       <button class="rail-btn" data-view="email" title="Email" onclick="switchView('email')">📧</button>
       <button class="rail-btn" data-view="calendar" title="Calendar" onclick="switchView('calendar')">📅</button>
+      <button class="rail-btn" data-view="wiki" title="User Manual (Wiki)" onclick="switchView('wiki')">📖</button>
       <div class="rail-spacer"></div>
       <button class="rail-btn" data-view="settings" title="Settings" onclick="switchView('settings')">⚙️</button>
     </nav>
@@ -2055,6 +2250,8 @@
           <div class="chat-input-wrap">
             <div class="chat-toolbar">
               <button class="chat-tool-btn" id="btn-agent" onclick="toggleAgent()" title="Agent mode">🤖 Agent</button>
+              <button class="chat-tool-btn" id="btn-swarm" onclick="toggleSwarm()" title="Swarm mode (Multi-Agent)">🐝 Swarm</button>
+              <button class="chat-tool-btn" id="btn-voice" onclick="toggleVoiceMode()" title="Voice mode (Jarvis)">🎙️ Voice</button>
               <button class="chat-tool-btn" onclick="toggleTool('web')" id="tool-web">🌐 Web</button>
               <button class="chat-tool-btn" onclick="toggleTool('files')" id="tool-files">📎 Files</button>
               <button class="chat-tool-btn" onclick="toggleTool('shell')" id="tool-shell">💻 Shell</button>
@@ -2066,6 +2263,48 @@
             <div class="chat-input-footer">
               <span class="chat-hints text-dim text-xs" id="token-count">0 tokens</span>
               <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">↑</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VOICE ASSISTANT OVERLAY (JARVIS) -->
+        <div id="voice-overlay">
+          <button class="voice-close-btn" onclick="toggleVoiceMode()" title="Exit Voice Mode">×</button>
+          
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 24px; font-weight: 800; color: var(--accent); letter-spacing: 0.05em; text-transform: uppercase;">Jarvis</div>
+            <div style="font-size: 11px; color: var(--text3); margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase;">Local Audio Assistant</div>
+          </div>
+
+          <div class="jarvis-orb-container" id="orb-container" onclick="handleOrbClick()">
+            <div class="orb-ring"></div>
+            <div class="orb-ring"></div>
+            <div class="orb-ring"></div>
+            <div class="jarvis-orb idle" id="jarvis-orb"></div>
+          </div>
+          
+          <div class="voice-status-text" id="voice-status">Clicca sulla sfera per parlare con Jarvis</div>
+          <div class="voice-transcript-box" id="voice-transcript"></div>
+          
+          <!-- Controls -->
+          <div style="margin-top: 40px; display: flex; gap: 20px; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 12px 20px; border-radius: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 10px; text-transform: uppercase; color: var(--text3); font-weight: 700;">Lingua</label>
+              <select id="voice-lang-select" onchange="changeVoiceLanguage(this.value)" style="background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 12px; outline: none; cursor: pointer;">
+                <option value="it-IT" selected>Italiano (it-IT)</option>
+                <option value="en-US">English (en-US)</option>
+                <option value="es-ES">Español (es-ES)</option>
+                <option value="fr-FR">Français (fr-FR)</option>
+                <option value="de-DE">Deutsch (de-DE)</option>
+              </select>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 4px; align-items: center;">
+              <label style="font-size: 10px; text-transform: uppercase; color: var(--text3); font-weight: 700;">Conversazione Continua</label>
+              <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 22px; margin-top: 4px;">
+                <input type="checkbox" id="voice-continuous-toggle" onchange="toggleContinuousVoice(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border); transition: .4s; border-radius: 34px;"></span>
+              </label>
             </div>
           </div>
         </div>
@@ -2322,6 +2561,76 @@
         <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
       </div>
 
+      <!-- WIKI / USER MANUAL VIEW -->
+      <div class="view" id="view-wiki" style="overflow-y: auto; padding: 32px 40px; background: var(--bg);">
+        <div class="page-header" style="margin-bottom: 40px;">
+          <div class="page-title" style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">📖 ArX-AI User Manual</div>
+          <div class="page-sub" style="font-size: 15px; margin-top: 8px; color: var(--text2);">Your comprehensive guide to mastering the ultimate private AI workspace.</div>
+        </div>
+
+        <div style="max-width: 800px; display: flex; flex-direction: column; gap: 40px;">
+          
+          <section>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">💬 Chat & Agent Mode</h2>
+            <div style="background: var(--surface2); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+              <p style="margin-bottom: 12px; color: var(--text);">ArX allows you to chat with multiple local models via Ollama. By enabling <strong>Agent Mode (🤖)</strong>, your AI gains superpowers:</p>
+              <ul style="padding-left: 20px; list-style-type: disc; display: flex; flex-direction: column; gap: 8px; color: var(--text2);">
+                <li><strong style="color: var(--text);">🌐 Web:</strong> Allows the agent to browse the internet via a private SearXNG instance.</li>
+                <li><strong style="color: var(--text);">📎 Files:</strong> The agent can read and write files directly in your workspace.</li>
+                <li><strong style="color: var(--text);">💻 Shell:</strong> The agent can execute sandboxed shell commands to interact with your system.</li>
+                <li><strong style="color: var(--text);">🧠 Memory:</strong> Enables long-term vector database storage using ChromaDB to recall past conversations and documents.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">🐝 Swarm Mode (Multi-Agent)</h2>
+            <div style="background: var(--surface2); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+              <p style="margin-bottom: 12px; color: var(--text);">Toggle the <strong>Swarm Mode</strong> to activate a multi-agent workflow. When you send a prompt, a team of specialized agents will collaborate to solve it:</p>
+              <ul style="padding-left: 20px; list-style-type: decimal; display: flex; flex-direction: column; gap: 8px; color: var(--text2);">
+                <li><strong style="color: var(--text);">Researcher (🔍):</strong> Gathers information and creates an outline.</li>
+                <li><strong style="color: var(--text);">Writer (✍️):</strong> Drafts the content based on the outline.</li>
+                <li><strong style="color: var(--text);">Reviewer (🧐):</strong> Critiques the draft and outputs the final polished result.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--green); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">🎙️ Voice Mode (Jarvis)</h2>
+            <div style="background: var(--surface2); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+              <p style="margin-bottom: 12px; color: var(--text);">Click the <strong>🎙️ Voice</strong> button to open the Jarvis overlay. A green interactive orb will appear.</p>
+              <p style="margin-bottom: 12px; color: var(--text);">Click the orb to start listening. Speak naturally, and click the orb again to stop listening and execute the command. The AI will reply with synthesized voice.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--amber); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">🐍 Python Code Interpreter</h2>
+            <div style="background: var(--surface2); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+              <p style="margin-bottom: 12px; color: var(--text);">ArX includes an embedded WebAssembly Python interpreter (Pyodide). When the AI outputs a Python code block, you'll see a <strong>Run</strong> button next to it.</p>
+              <p style="color: var(--text);">Clicking <strong>Run</strong> executes the code entirely in your browser. It supports <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:12px;">matplotlib</code> for inline graphs and charts! <em style="color:var(--text3);">(Note: the first launch requires downloading ~20MB).</em></p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--accent2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">⚔️ Model Arena & Deep Research</h2>
+            <div style="background: var(--surface2); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+              <p style="margin-bottom: 12px; color: var(--text);"><strong>Arena:</strong> Test two models blindly side-by-side. Vote on the best response and reveal the winner to track your favorite local models.</p>
+              <p style="color: var(--text);"><strong>Deep Research:</strong> Provide a query, and the system will orchestrate an autonomous research task, pulling documents and summarizing them into a detailed Markdown report.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 style="font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">📝 Editor, Notes & Integrations</h2>
+            <div style="background: var(--surface2); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+              <p style="margin-bottom: 12px; color: var(--text);">Use the built-in rich text <strong>Editor</strong> to draft documents with the help of AI suggestions.</p>
+              <p style="margin-bottom: 12px; color: var(--text);">Keep track of your ideas in <strong>Notes & Tasks</strong>.</p>
+              <p style="color: var(--text);">Connect IMAP/CalDAV servers in the settings to let the AI triage your <strong>Email</strong> and organize your <strong>Calendar</strong>.</p>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
       <!-- SETTINGS VIEW -->
       <div class="view" id="view-settings">
         <div class="page-header">
@@ -2570,6 +2879,11 @@ open http://localhost:3000</pre>
     const state = {
       view: 'chat',
       agentMode: false,
+      swarmMode: false,
+      voiceMode: false,
+      voiceContinuous: false,
+      voiceLanguage: 'it-IT',
+      voiceState: 'idle', // idle, listening, thinking, speaking
       activeTools: new Set(),
       currentModel: { id: 'llama3.2:3b', provider: 'Ollama', label: 'llama3.2:3b · Ollama' },
       messages: [],
@@ -2694,10 +3008,17 @@ open http://localhost:3000</pre>
       appendMessage('user', 'You', text);
       const thinkingId = appendThinking();
 
+      if (state.swarmMode) {
+        await runSwarm(text);
+        return;
+      }
+
       await delay(300 + Math.random() * 400);
       if (state.agentMode) await runAgentSteps(text);
 
-      await streamAIReply(text, thinkingId);
+      const pySystem = "You have an embedded Python interpreter. To run code for data analysis, math, or plotting, wrap your python code EXACTLY inside <execute_python> and </execute_python> tags. The code will execute automatically and show the output to the user. Use matplotlib for plotting. Do NOT use plt.show() inside a loop.";
+      
+      await streamAIReply(text, thinkingId, pySystem);
     }
 
     function hideWelcome() {
@@ -2731,7 +3052,95 @@ open http://localhost:3000</pre>
       return id;
     }
 
-    async function streamAIReply(prompt, thinkingId) {
+    async function runSwarm(prompt) {
+      const thinking = document.getElementById('thinking-' + (Date.now() - 1000)); // Will grab the last appended thinking
+      // Let's grab by class instead to be safe
+      const msgs = document.getElementById('chat-messages');
+      const thinkingRow = msgs.lastElementChild;
+      const bubble = thinkingRow.querySelector('.msg-bubble');
+      bubble.innerHTML = '';
+      const senderEl = thinkingRow.querySelector('.msg-sender');
+      senderEl.textContent = '🐝 Swarm Task Force';
+      thinkingRow.id = '';
+
+      const swarmDiv = document.createElement('div');
+      swarmDiv.style = 'margin-top: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 13px; color: var(--text2); display: flex; flex-direction: column; gap: 8px;';
+      bubble.appendChild(swarmDiv);
+
+      const roles = [
+        { id: 'res', icon: '🔍', name: 'Researcher', status: 'In attesa', prompt: 'Sei un ricercatore esperto. Raccogli informazioni, analizza il seguente problema e crea una scaletta dettagliata dei punti chiave. Sii conciso ma esaustivo.' },
+        { id: 'wri', icon: '✍️', name: 'Writer', status: 'In attesa', prompt: 'Sei uno scrittore professionista. Usa gli appunti del ricercatore per scrivere un testo fluido, coinvolgente e ben strutturato in italiano. Usa la formattazione markdown.' },
+        { id: 'rev', icon: '🧐', name: 'Reviewer', status: 'In attesa', prompt: 'Sei un revisore critico severo. Rivedi il testo dello scrittore, correggi errori, migliora la forma e la leggibilità in italiano e restituisci la versione definitiva finale senza aggiungere altro.' }
+      ];
+
+      function renderSwarmUI() {
+        swarmDiv.innerHTML = '<div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Workflow Attivo</div>' + roles.map(r => 
+          `<div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 24px; text-align: center;">${r.icon}</div>
+            <div style="flex: 1; font-weight: 500;">${r.name}</div>
+            <div style="font-size: 12px; color: ${r.status.includes('corso') ? 'var(--amber)' : (r.status.includes('Completato') ? 'var(--green)' : 'var(--text3)')}; display: flex; align-items: center; gap: 4px;">
+              ${r.status.includes('corso') ? '<span class="agent-status-dot"></span>' : ''} ${r.status}
+            </div>
+          </div>`
+        ).join('');
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      async function callAgent(role, userPrompt) {
+        role.status = 'In corso...'; renderSwarmUI();
+        let result = '';
+        try {
+          const res = await fetch('http://localhost:11434/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: state.currentModel.id, prompt: userPrompt, system: role.prompt, stream: false })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            result = data.response;
+          } else result = '[Errore]';
+        } catch(e) { result = '[Ollama non raggiungibile]'; }
+        role.status = 'Completato'; renderSwarmUI();
+        return result;
+      }
+
+      renderSwarmUI();
+      const research = await callAgent(roles[0], prompt);
+      const draft = await callAgent(roles[1], `Richiesta originale: ${prompt}\\n\\nAppunti del Ricercatore:\\n${research}`);
+      
+      roles[2].status = 'In corso...'; renderSwarmUI();
+      const finalDiv = document.createElement('div');
+      finalDiv.style.marginTop = '12px';
+      bubble.appendChild(finalDiv);
+
+      try {
+        const res = await fetch('http://localhost:11434/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: state.currentModel.id, prompt: `Bozza dello scrittore:\\n${draft}\\n\\nMigliorala seguendo la richiesta originale: ${prompt}`, system: roles[2].prompt, stream: true })
+        });
+        if (res.ok) {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let fullText = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\\n').filter(l => l.trim() !== '');
+            for (const line of lines) {
+              const parsed = JSON.parse(line);
+              fullText += parsed.response;
+              finalDiv.innerHTML = formatMsg(fullText);
+              msgs.scrollTop = msgs.scrollHeight;
+            }
+          }
+        }
+      } catch(e) { finalDiv.innerHTML = '<span style="color:var(--red)">⚠️ Error connecting to Ollama.</span>'; }
+      roles[2].status = 'Completato'; renderSwarmUI();
+    }
+
+    async function streamAIReply(prompt, thinkingId, system = '') {
       const thinking = document.getElementById(thinkingId);
       if (!thinking) return;
       const bubble = thinking.querySelector('.msg-bubble');
@@ -2750,8 +3159,8 @@ open http://localhost:3000</pre>
               res = await fetch(base + '/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: state.currentModel.id, prompt: prompt, stream: true }),
-                signal: AbortSignal.timeout(10000)
+                body: JSON.stringify({ model: state.currentModel.id, prompt: prompt, system: system, stream: true }),
+                signal: AbortSignal.timeout(120000)
               });
               if (res.ok) break;
             } catch (e) { /* ignore and try next */ }
@@ -2777,8 +3186,18 @@ open http://localhost:3000</pre>
               document.getElementById('chat-messages').scrollTop = 999999;
             }
           }
+
+          // Speech synthesis for AI reply
+          speak(fullText);
+
+          // Check for Python execution blocks
+          const execMatches = [...fullText.matchAll(/<execute_python>([\s\S]*?)<\/execute_python>/g)];
+          for (const match of execMatches) {
+            if (match[1]) await executePython(match[1].trim(), thinking);
+          }
         } catch (e) {
-          bubble.innerHTML = '<span style="color:var(--red)">⚠️ Error connecting to Ollama. Is it running?</span>';
+          bubble.innerHTML = `<span style="color:var(--red)">⚠️ Error: ${e.message || e}. Assicurati che Ollama sia in esecuzione (ollama serve).</span>`;
+          console.error(e);
         }
       } else {
         // Fake API fallback for Cloud models
@@ -2788,7 +3207,22 @@ open http://localhost:3000</pre>
 
     function formatMsg(text) {
       return text
-        .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+        .replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+          const escapedCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          if (lang && lang.toLowerCase() === 'python') {
+            const b64Code = btoa(unescape(encodeURIComponent(code.trim())));
+            return `<div class="python-code-block-container" style="position: relative; margin: 12px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface2);">
+              <div style="display: flex; justify-content: space-between; align-items: center; background: var(--surface3); padding: 6px 12px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text2); font-family: var(--sans);">
+                <span>🐍 Python Code</span>
+                <button class="run-py-btn" onclick="runManualPython(this)" data-code="${b64Code}" style="background: var(--accent); color: var(--bg); border: none; border-radius: 4px; padding: 4px 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Run
+                </button>
+              </div>
+              <pre style="margin: 0; padding: 12px; overflow-x: auto; font-family: var(--mono); font-size: 12px; color: var(--text); background: transparent;"><code class="language-python">${escapedCode}</code></pre>
+            </div>`;
+          }
+          return `<pre><code>${escapedCode}</code></pre>`;
+        })
         .replace(/`([^`]+)`/g, '<code>$1</code>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
@@ -2806,12 +3240,17 @@ open http://localhost:3000</pre>
     ═══════════════════════════════════════════════════ */
     function toggleAgent() {
       state.agentMode = !state.agentMode;
-      const btn = document.getElementById('btn-agent');
-      const tbBtn = document.getElementById('agent-toggle-btn');
-      btn.classList.toggle('on', state.agentMode);
+      if (state.agentMode && state.swarmMode) toggleSwarm();
+      document.getElementById('btn-agent').classList.toggle('active', state.agentMode);
+      const btn = document.getElementById('agent-toggle-btn');
+      if (btn) btn.classList.toggle('on', state.agentMode);
       if (state.agentMode) {
         toast('Agent mode enabled — tools are active', 'success');
-        ['web', 'memory', 'skills'].forEach(t => { state.activeTools.add(t); document.getElementById('tool-' + t).classList.add('on'); });
+        if (result.isFinal) {
+        // Final result: update transcript UI, keep listening
+        document.getElementById('voice-transcript').textContent = transcript.trim();
+        // Do not stop recognition; user will stop manually
+      }['web', 'memory', 'skills'].forEach(t => { state.activeTools.add(t); document.getElementById('tool-' + t).classList.add('on'); });
       } else {
         toast('Agent mode disabled', 'info');
         state.activeTools.clear();
@@ -2819,10 +3258,146 @@ open http://localhost:3000</pre>
       }
     }
 
+    function toggleSwarm() {
+      state.swarmMode = !state.swarmMode;
+      if (state.swarmMode && state.agentMode) toggleAgent();
+      document.getElementById('btn-swarm').classList.toggle('active', state.swarmMode);
+      if (state.swarmMode) {
+        toast('Swarm Task Force mode enabled', 'success');
+      } else {
+        toast('Swarm Task Force mode disabled', 'info');
+      }
+    }
+
     function toggleTool(t) {
       const btn = document.getElementById('tool-' + t);
       if (state.activeTools.has(t)) { state.activeTools.delete(t); btn.classList.remove('on'); }
       else { state.activeTools.add(t); btn.classList.add('on'); }
+    }
+
+    // ─── Voice Assistant Functions ──────────────────────────────────────
+    function toggleVoiceMode() {
+      state.voiceMode = !state.voiceMode;
+      const overlay = document.getElementById('voice-overlay');
+      const btn = document.getElementById('btn-voice');
+      if (overlay) overlay.classList.toggle('active', state.voiceMode);
+      if (btn) btn.classList.toggle('active', state.voiceMode);
+      if (!state.voiceMode) {
+        stopRecognition();
+        setVoiceState('idle');
+      }
+    }
+
+    function setVoiceState(v) {
+      state.voiceState = v;
+      const orb = document.getElementById('jarvis-orb');
+      if (orb) {
+        orb.className = 'jarvis-orb ' + v;
+      }
+      const status = document.getElementById('voice-status');
+      if (status) {
+        const messages = {
+          idle: 'Clicca sulla sfera per parlare con Jarvis',
+          listening: 'Ascolto…',
+          thinking: 'Pensando…',
+          speaking: 'Rispondendo…'
+        };
+        status.textContent = messages[v] || '';
+      }
+    }
+
+    function handleOrbClick() {
+      if (!state.voiceMode) return;
+      if (state.voiceState === 'idle' || state.voiceState === 'thinking') {
+        state.voiceTranscript = '';
+        const ui = document.getElementById('voice-transcript');
+        if (ui) ui.textContent = '';
+        startRecognition();
+      } else if (state.voiceState === 'listening') {
+        stopRecognition(true);
+      }
+    }
+
+function startRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('SpeechRecognition API not supported in this browser.');
+    return;
+  }
+  const rec = new SpeechRecognition();
+  rec.lang = state.voiceLanguage || 'it-IT';
+  rec.continuous = true; // always continuous listening
+  rec.interimResults = true; // receive interim results
+  rec.onstart = () => setVoiceState('listening');
+
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          state.voiceTranscript += e.results[i][0].transcript + ' ';
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      const ui = document.getElementById('voice-transcript');
+      if (ui) ui.textContent = (state.voiceTranscript + interim).trim();
+    };
+
+  rec.onerror = (e) => {
+    console.error('Speech recognition error', e);
+    stopRecognition();
+  };
+
+  rec.onend = () => {
+    if (state.voiceState === 'listening' && state.voiceContinuous) {
+      // restart for continuous mode
+      startRecognition();
+    } else {
+      stopRecognition(true);
+    }
+  };
+  state.recognition = rec;
+  rec.start();
+}
+
+    function stopRecognition(submit = false) {
+      if (state.recognition) {
+        try { state.recognition.stop(); } catch (e) {}
+        state.recognition = null;
+      }
+      setVoiceState('idle');
+      
+      const ui = document.getElementById('voice-transcript');
+      const text = ui ? ui.textContent.trim() : state.voiceTranscript.trim();
+      
+      if (submit && text) {
+        const inp = document.getElementById('chat-input');
+        if (inp) {
+          inp.value = text;
+          // Execute after a slight delay to allow UI to update
+          setTimeout(() => sendMessage(), 100);
+        }
+      }
+      
+      state.voiceTranscript = '';
+      if (ui) ui.textContent = '';
+    }
+
+    function toggleContinuousVoice(checked) {
+      state.voiceContinuous = !!checked;
+    }
+
+    function changeVoiceLanguage(lang) {
+      state.voiceLanguage = lang;
+    }
+
+    function speak(text) {
+      if (!state.voiceMode) return;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = state.voiceLanguage || 'it-IT';
+      utter.onstart = () => setVoiceState('speaking');
+      utter.onend = () => setVoiceState('idle');
+      window.speechSynthesis.speak(utter);
     }
 
     function activateAgent() {
@@ -3362,6 +3937,129 @@ open http://localhost:3000</pre>
     }
 
     /* ═══════════════════════════════════════════════════
+       PYTHON INTERPRETER (Pyodide)
+    ═══════════════════════════════════════════════════ */
+    let pyodideInstance = null;
+    let pyodideLoading = false;
+
+    async function initPyodide() {
+      if (pyodideInstance) return pyodideInstance;
+      if (pyodideLoading) {
+        while (!pyodideInstance) await new Promise(r => setTimeout(r, 100));
+        return pyodideInstance;
+      }
+      pyodideLoading = true;
+      try {
+        pyodideInstance = await loadPyodide({
+          stdout: (msg) => {
+            if (pyodideInstance && pyodideInstance._currentStdout) pyodideInstance._currentStdout(msg);
+          }
+        });
+        await pyodideInstance.loadPackage(['micropip']);
+      } catch (err) {
+        console.error('Failed to load Pyodide', err);
+      }
+      return pyodideInstance;
+    }
+
+    async function executePython(code, targetElement) {
+      let appendTarget;
+      if (targetElement.classList.contains('msg-row')) {
+         appendTarget = targetElement.querySelector('.msg-bubble');
+      } else {
+         appendTarget = targetElement;
+      }
+      
+      const execDiv = document.createElement('div');
+      execDiv.className = 'py-exec-box';
+      execDiv.style = 'margin-top: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: var(--mono); font-size: 12px; color: var(--text2);';
+      execDiv.innerHTML = '<div style="color: var(--amber); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><span class="agent-status-dot"></span> ⚙️ Avvio Python Interpreter (il primo avvio richiede il download di ~20MB)...</div>';
+      appendTarget.appendChild(execDiv);
+      if (appendTarget.parentNode && appendTarget.parentNode.scrollTop !== undefined) {
+         appendTarget.parentNode.scrollTop = appendTarget.parentNode.scrollHeight;
+      }
+      
+      try {
+        const pyodide = await initPyodide();
+        execDiv.innerHTML = '<div style="color: var(--green); margin-bottom: 8px;">⚙️ Python Interpreter pronto. Esecuzione in corso...</div>';
+        
+        let outputText = '';
+        pyodide._currentStdout = (msg) => { outputText += msg + '\n'; };
+        
+        await pyodide.loadPackagesFromImports(code);
+        
+        let runCode = code;
+        if (code.includes('matplotlib') || code.includes('plt.')) {
+           await pyodide.loadPackage('matplotlib');
+           await pyodide.runPythonAsync(`
+import matplotlib.pyplot as plt
+import io, base64, sys
+def show_plot():
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    img_b64 = base64.b64encode(buf.read()).decode('utf-8')
+    sys.stdout.write(f"[[PLOT_B64:{img_b64}]]\\n")
+    plt.clf()
+plt.show = show_plot
+           `);
+
+           // Append auto-show check at the end of execution to display plots created without explicit plt.show()
+           runCode += `\n
+import sys
+if 'plt' in locals() or 'plt' in globals() or 'matplotlib' in sys.modules:
+    import matplotlib.pyplot as plt
+    if plt.get_fignums():
+        plt.show()
+`;
+        }
+
+        await pyodide.runPythonAsync(runCode);
+        
+        const lines = outputText.split('\n');
+        let finalHtml = '';
+        lines.forEach(line => {
+          if (line.startsWith('[[PLOT_B64:')) {
+            const b64 = line.substring(11, line.length - 2);
+            finalHtml += `<img src="data:image/png;base64,${b64}" style="max-width: 100%; border-radius: 8px; margin-top: 8px; background: white; padding: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" />`;
+          } else if (line.trim()) {
+            finalHtml += `<div>${line.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+          }
+        });
+        
+        if (!finalHtml) finalHtml = '<div style="color: var(--text3); font-style: italic;">(Nessun output)</div>';
+        
+        execDiv.innerHTML = `<div style="color: var(--accent); margin-bottom: 8px; font-weight: 600;">🐍 Python Output:</div>${finalHtml}`;
+        msgDiv.parentNode.scrollTop = msgDiv.parentNode.scrollHeight;
+      } catch (err) {
+        execDiv.innerHTML = `<div style="color: var(--red); margin-bottom: 8px; font-weight: 600;">❌ Python Error:</div><div style="color: var(--red); white-space: pre-wrap;">${err.toString().replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+        msgDiv.parentNode.scrollTop = msgDiv.parentNode.scrollHeight;
+      }
+    }
+
+    async function runManualPython(btn) {
+      const b64 = btn.getAttribute('data-code');
+      const code = decodeURIComponent(escape(atob(b64)));
+      
+      let container = btn.closest('.python-code-block-container');
+      if (!container) container = btn.closest('.msg-row') || btn.parentElement;
+      
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.innerHTML = '⚙️ Running...';
+
+      try {
+        await executePython(code, container);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M8 5v14l11-7z"/></svg> Run`;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════
        UTILS
     ═══════════════════════════════════════════════════ */
     function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -3376,6 +4074,7 @@ open http://localhost:3000</pre>
        INIT
     ═══════════════════════════════════════════════════ */
     document.addEventListener('DOMContentLoaded', async () => {
+      setTimeout(initPyodide, 2000);
       renderCookbook();
       renderEmail();
       renderNotes();
